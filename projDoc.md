@@ -22,16 +22,14 @@ programa deve numerar sequencialmente os candidatos.
 O programa deve ter 2 tipos de utilizadores: o administrador e o candidato.
 
 Programa:
-Um utilizador deve estar devidamente registado. Existem 2 tipos de utilizadores: o
-
-administrador e o candidato. O administrador (user Admin) faz a gestão das dos cursos e
-
-seriação final dos candidatos. O candidato pode gerir a sua própria candidatura.
+Um utilizador deve estar devidamente registado. Existem 2 tipos de utilizadores:
+o administrador e o candidato.
+O administrador (user Admin) faz a gestão das dos cursos e seriação final dos candidatos.
+O candidato pode gerir a sua própria candidatura.
 
 Assim, a implementação do trabalho está dividida em várias partes:
 1. Numa primeira parte pretende-se implementar a gestão dos cursos que podem
-
-receber candidaturas num determinado ano letivo.
+   receber candidaturas num determinado ano letivo.
 
 2. Na segunda parte pretende-se gerir as candidaturas.
 
