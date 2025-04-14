@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int textInputSanitize(char *input, char *filter, char replace){
+int stringReplace(char *input, char *filter, char *replace){
     if(input == NULL) return 1;
     if(filter[0] == '\0') return 1;
     int i = 0;
@@ -13,11 +13,13 @@ int textInputSanitize(char *input, char *filter, char replace){
         return 0;
     }
     for(i = 0 ; i < strlen(input) ; i++){
-        if(input[i] != filter[0]){
-            buffer[i-replaced] = input[i];
+        if(input[i] != filter[0] && replace[0] != '\0'){
+            buffer[i - replaced] = input[i];
             continue;
+        }else{
+            buffer[i] = replace[0];
         }
-        replaced++;
+        if(replace[0] == '\0') replaced++;
     }
     strcpy(input, buffer);
     free(buffer);
@@ -26,7 +28,7 @@ int textInputSanitize(char *input, char *filter, char replace){
 
 //int intNumberInput(char *input, int *output);
 
-int64_t int64NumberInput(char *input){
+int64_t int64FromString(char *input){
     if(input == NULL) return -1;
     if(strlen(input) == 0)return -1;
     return atoll(input);
@@ -34,7 +36,7 @@ int64_t int64NumberInput(char *input){
 
 //int floatNumberInput(char *input, float *output);
 
-double doubleNumberInput(char *input){
+double doubleFromString(char *input){
     if(input == NULL) return -1;
     if(strlen(input) == 0)return -1;
     return atof(input);
