@@ -54,34 +54,32 @@ void dynamic_line_print(char *string, int text_const, int txt_indent, int txt_ma
             printf("|%*c", txt_indent, space[0]);
             continue;
         }
-        if(textconst <= j){
+        if(j >= textconst){
             printf("%*c|\n", textconst-j + txt_margin, space[0]);
-            j = 0;
             printf("|%*c", txt_indent, space[0]);
+            i--;
+            j = 0;
             continue;
         }
         if(i+1 == arraysize){
             printf("%*c|\n", textconst-j + txt_margin, space[0]);
             continue;
         }
-        printf("%c",string[i]);
         j++;
+        printf("%c",string[i]);
     }
 }
 
-int menuPrint(int menuSection, int padding_top, int padding_bottom){
+int menuPrint(char *menuSection, int padding_top, int padding_bottom){
     syscls;
-    char buffer[256] = {'\0'};
     char *dir = malloc(sizeof(char)*256);
-    int64_t filesize = 0;
     strcpy(dir, "./menus/menuPrint");
-    snprintf(buffer, 256, "%i", menuSection);
-    strcat(dir,buffer);
+    strcat(dir, menuSection);
     strcat(dir,".menu");
     FILE *fp = fopen(dir, "r");
     if(fp == NULL) return -1;
     fseek(fp, 0, SEEK_END);
-    filesize = ftell(fp);
+    int64_t filesize = ftell(fp);
     if(filesize == 0) return -1;
     fseek(fp, 0, SEEK_SET);
     char *menuText = (char*)malloc(sizeof(char)*filesize);

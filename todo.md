@@ -17,10 +17,10 @@ Backend:
     [x] user input sanitization system for inputs 
         [x] header file
         [x] output specific sanitized inputs
-    [] menu function system to organise menus
-        [] header file
+    [x] menu function system to organise menus
+        [x] header file
         [] handle user input
-        [] handle output 
+        [x] handle output 
         [] handle logic for changing menus
 O programa deve ter 2 tipos de utilizadores: o administrador e o candidato.
 Programa:
