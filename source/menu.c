@@ -70,10 +70,11 @@ void dynamic_line_print(char *string, int text_const, int txt_indent, int txt_ma
     }
 }
 
+
 int menuPrint(char *menuSection, int padding_top, int padding_bottom){
     syscls;
     char *dir = malloc(sizeof(char)*256);
-    strcpy(dir, "./menus/menuPrint");
+    strcpy(dir, "./menus/");
     strcat(dir, menuSection);
     strcat(dir,".menu");
     FILE *fp = fopen(dir, "r");
@@ -100,4 +101,3 @@ int menuPrint(char *menuSection, int padding_top, int padding_bottom){
     free(dir);
     fclose(fp);
 }
-
