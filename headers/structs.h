@@ -1,16 +1,17 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-typedef struct user{
+typedef struct users{
     int userId;
     int type;
     char userName[256];
     char password[256];
-}USER;
+    struct users *next;
+}USERS;
 
 typedef struct candidatura{
-    candidatura *prev;
-    candidatura *next;
+    struct candidatura *prev;
+    struct candidatura *next;
     char candidaturaId;
     char cursoId;
     int ano;

@@ -3,17 +3,22 @@
 #include <string.h>
 #include "../headers/stringParse.h"
 #include "../headers/menu.h"
+#include "../headers/userMiddleware/user.h"
 
 int login(){
     //todo create a function that searches for the user
     int attempts = 0;
-    char buffer[256];
+    char username[256];
+    char password[256];
     while(attempts < 3){
         menuPrint("Login", 1, 1);
         printf("Nome:");
-        fgets(buffer, 256, stdin);
+        fgets(username, 256, stdin);
         printf("Password:");
-        fgets(buffer, 256, stdin);
+        fgets(password, 256, stdin);
+        if(userValidate(*username, *password) == 1){
+            return 1;
+        }
         attempts++;
     }
     return 0;
