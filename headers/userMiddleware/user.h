@@ -3,18 +3,16 @@
 #ifndef LOGIN_H
 #define LOGIN_H
 
-int loadUserData(USERS **userList);
-
-int updateUserData(USERS **userList);
-
-void freeUserData(USERS *userList);
-
-int deleteUser(int id);
-
-USERS *searchUsername(USERS *userList, char *username);
+USERS *searchUsername(USERS *userList,char *username);
 
 USERS *searchId(USERS *userList,int id, int *jumps);
 
-int userValidate(char username,char password);
+int createUser(char *username, char *password);
+
+int updateUser(int id, char *username,char *password,int type);
+
+int deleteUser(int userId);
+
+int userValidate(char *username,char *password);
 
 #endif

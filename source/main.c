@@ -17,7 +17,7 @@ int login(){
         fgets(username, 256, stdin);
         printf("Password:");
         fgets(password, 256, stdin);
-        if(userValidate(*username, *password) == 1){
+        if(userValidate(username, password) == 1){
             return 1;
         }
         printf("username ou password erradas\n");

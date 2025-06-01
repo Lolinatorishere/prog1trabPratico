@@ -15,7 +15,7 @@ USERS *searchUsername(USERS *userList,char *username) {
     return NULL;
 }
 
-USERS *searchId(USERS *userList,int id, int *jumps) {
+USERS *searchId(USERS *userList, int id, int *jumps) {
     USERS *current = userList;
     while (current) {
         if (current->userId == id) {
@@ -82,7 +82,20 @@ void freeUserData(USERS *userList) {
     }
 }
 
-USERS *createUser(char *username, char *password) {
+void updateList(USERS **head, USERS *newNode) {
+    if (*head == NULL) {
+        *head = newNode;
+        newNode->type = 10;
+    } else {
+        USERS *current = *head;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = newNode;
+    }
+}
+
+USERS *addUser(char *username, char *password) {
     USERS *newNode = (USERS *)malloc(sizeof(USERS));
     if (newNode == NULL) {
         printf("Failed to allocate memory for new user node");
@@ -97,17 +110,52 @@ USERS *createUser(char *username, char *password) {
     return newNode;
 }
 
-void updateList(USERS **head, USERS *newNode) {
-    if (*head == NULL) {
-        *head = newNode;
-        newNode->type = 10;
-    } else {
-        USERS *current = *head;
-        while (current->next != NULL) {
-            current = current->next;
-        }
-        current->next = newNode;
+int createUser(char *username, char *password){
+    USERS *users = NULL;
+    USERS *endNode = NULL;
+    if(loadUserData(&users) != 0){
+        return 0;
+    };
+    USERS *check = searchUsername(users, username);
+    if(check != NULL){
+        freeUserData(users);
+        return -1;
     }
+    USERS *user = addUser(username, password);
+    while(users->next != NULL){
+        endNode = users->next;
+    }
+    endNode->next = user;
+    updateUserData(users);
+    freeUserData(users);
+    return 1;
+}
+
+int updateUser(int id, char *username, char *password, int type){
+    int jumps = 0;
+    USERS *check = NULL;
+    USERS *users = NULL;
+    if(loadUserData(&users) != 0){
+        return -1;
+    }
+    USERS *user = searchId(users, id, &jumps);
+    if(user == NULL){
+        return -2;
+    }
+    if(username[0] != '\0'){
+        check = searchUsername(users, username);
+        if(check != NULL){
+            return -3;
+        }
+        strcpy(user->userName, username);
+    }
+    if(password[0] != '\0'){
+        strcpy(user->password, password);
+    }
+    if(type > 0){
+        user->type = type;
+    }
+    return 1;
 }
 
 int deleteUser(int userId){
@@ -132,22 +180,6 @@ int deleteUser(int userId){
     prev->next = user->next;
     user->next = NULL;
     freeUserData(user);
-    updateUserData(users);
-    freeUserData(users);
-    return 1;
-}
-
-int addUser(char *username, char *password){
-    USERS *users = NULL;
-    USERS *endNode = NULL;
-    if(loadUserData(&users) != 0){
-        return 0;
-    };
-    USERS *user = createUser(username, password);
-    while(users->next != NULL){
-        endNode = users->next;
-    }
-    endNode->next = user;
     updateUserData(users);
     freeUserData(users);
     return 1;
