@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "../headers/stringParse.h"
 #include "../headers/menu.h"
 #include "../headers/userMiddleware/user.h"
@@ -11,7 +12,7 @@ int login(){
     char username[256];
     char password[256];
     while(attempts < 3){
-        menuPrint("Login", 1, 1);
+        menuPrint("Login", 2, 1);
         printf("Nome:");
         fgets(username, 256, stdin);
         printf("Password:");
@@ -19,8 +20,12 @@ int login(){
         if(userValidate(*username, *password) == 1){
             return 1;
         }
+        printf("username ou password erradas\n");
+        sleep(2);
         attempts++;
     }
+    printf("voltar para start Menu\n");
+    sleep(1);
     return 0;
 }
 
@@ -31,7 +36,7 @@ int main(){
     while(1){
         switch(programState){
             case 0:
-                menuPrint("StartUI", 1, 1);
+                menuPrint("StartUI", 1, 2);
                 printf("input:");
                 fgets(buffer, 256, stdin);
                 input = int64FromString(buffer);
@@ -43,9 +48,8 @@ int main(){
                 if(login() == 0){
                     programState = 0;
                 }else{
-                    programState = 2;
+                    programState = 3;
                 }
-                
                 break;
             case 2:
                 menuPrint("NewUser", 1, 1);
