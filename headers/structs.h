@@ -6,8 +6,6 @@ typedef struct users{
     int type;
     char userName[256];
     char password[256];
-    struct users *next;
-    struct users *prev;
 }USERS;
 
 typedef struct candidatura{

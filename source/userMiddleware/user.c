@@ -2,203 +2,204 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../headers/structs.h"
-#define dir "./data/userdata.dat"
+#define dir "./data/userData.dat"
 
-USERS *searchUsername(USERS *userList,char *username) {
-    USERS *current = userList;
-    while (current) {
-        if (strcmp(current->userName, username) == 0) {
-            return current; 
+USERS setUser(){
+    USERS user;
+    for(int i = 0 ; i < 256 ; i++){
+        user.userName[i] = '\0';
+        user.password[i] = '\0';
+    }
+    user.type = -1;
+    user.userId = -1;
+    return user;
+}
+
+USERS *searchUsername(USERS **userList, int64_t listSize , char *username, int64_t *index) {
+    for(int64_t i = 0 ; i < listSize ; i++){
+        if(strcmp(userList[i]->userName, username) == 0){
+            *index = i;
+            return userList[i];
         }
-        current = current->next;
     }
     return NULL;
 }
 
-USERS *searchId(USERS *userList, int id, int *jumps) {
-    USERS *current = userList;
-    while (current) {
-        if (current->userId == id) {
-            return current;
+USERS *searchId(USERS **userList, int64_t listSize, int id, int64_t *index) {
+    for(int64_t i = 0 ; i < listSize ; i++){
+        if(userList[i]->userId == id){
+            *index = i;
+            return userList[i];
         }
-        jumps++;
-        current = current->next;
     }
-    return NULL; 
+    return NULL;
 }
 
-int updateUserData(USERS *head) {
-    FILE *file = fopen(dir, "wb");
-    if (file == NULL) {
-        printf("Failed to open file");
+int updateUserData(USERS *user, USERS *userList, int64_t listSize){
+    int64_t size = listSize;
+    FILE *fp = fopen(dir, "wb");
+    if(!fp)
         return -1;
-    }
-    USERS *current = head;
-    while (current != NULL) {
-        // Write the current node's data to the file
-        if (fwrite(current, sizeof(USERS), 1, file) != 1) {
-            printf("Failed to write to file");
-            fclose(file);
-            return -1;
-        }
-        current = current->next;
-    }
-    fclose(file);
-    return 0;
+    if(&user != NULL)
+        size+=1;
+    fwrite(&size, sizeof(int64_t), 1, fp);
+    fwrite(userList, sizeof(USERS), listSize, fp);
+    if(&user != NULL)
+        fwrite(user, sizeof(USERS), 1, fp);
+    fclose(fp);
 }
 
-int loadUserData(USERS **userList) {
-    FILE *file = fopen(dir, "rb");
-    if (!file)
+int loadUserData(USERS **userList, int64_t *userTotal) {
+    int64_t filesize = 0;
+    USERS user;
+    user = setUser();
+    FILE *fp = fopen(dir, "rb");
+    if(!fp)
         return -1;
-    USERS *head = NULL;
-    USERS *tail = NULL;
-    USERS *tempUser = NULL;
-    while (fread(&tempUser, sizeof(USERS), 1, file) == 1) {
-        USERS *newUser = (USERS *)malloc(sizeof(USERS));
-        if (!newUser) {
-            fclose(file);
-            return -1;
-        }
-        newUser->next = NULL;
-        if (!head) {
-            head = newUser;
-        } else {
-            tail->next = newUser;
-        }
-        tail = newUser;
+    fseek(fp, 0, SEEK_END);
+    if(ftell(fp) == 0){
+        fclose(fp);
+        return 1;
     }
-    fclose(file);
-    *userList = head;
+    fseek(fp, 0, SEEK_SET);
+    fread(userTotal, sizeof(int64_t), 1, fp);
+    if(userTotal == 0)
+        *userTotal = 1;
+    *userList = (USERS *)malloc(sizeof(USERS) * *userTotal);
+    if(*userList == NULL){ 
+        fclose(fp);
+        return -1;
+    }
+    for(int i = 0 ; i < *userTotal ; i++){
+        fread(&user, sizeof(USERS), 1, fp);
+        strcpy(userList[i]->userName, user.userName);
+        strcpy(userList[i]->password, user.password);
+        userList[i]->type = user.type;
+        userList[i]->userId = user.userId;
+    }
+    fclose(fp);
     return 0;
 }
 
 void freeUserData(USERS *userList) {
-    USERS *current = userList;
-    while (current) {
-        USERS *next = current->next;
-        free(current);
-        current = next;
-    }
+    if(userList == NULL)
+        return;
+    free(userList);
 }
 
-void updateList(USERS **head, USERS *newNode) {
-    if (*head == NULL) {
-        *head = newNode;
-        newNode->type = 10;
-    } else {
-        USERS *current = *head;
-        while (current->next != NULL) {
-            current = current->next;
-        }
-        current->next = newNode;
-    }
-}
-
-USERS *addUser(char *username, char *password) {
-    USERS *newNode = (USERS *)malloc(sizeof(USERS));
-    if (newNode == NULL) {
-        printf("Failed to allocate memory for new user node");
-        return NULL;
-    }
-    strncpy(newNode->userName, username, sizeof(newNode->userName) - 1);
-    newNode->userName[sizeof(newNode->userName) - 1] = '\0';
-    strncpy(newNode->password, password, sizeof(newNode->password) - 1);
-    newNode->password[sizeof(newNode->password) - 1] = '\0';
-    newNode->type = 0;
-    newNode->next = NULL;
-    return newNode;
-}
-
-int createUser(char *username, char *password){
+int createUser(char *username, char *password, int type){
+    int64_t listSize = 0;
+    int64_t index = 0;
     USERS *users = NULL;
-    USERS *endNode = NULL;
-    if(loadUserData(&users) != 0){
-        return 0;
-    };
-    USERS *check = searchUsername(users, username);
-    if(check != NULL){
-        freeUserData(users);
+    USERS user;
+    user = setUser();
+    switch(loadUserData(&users, &listSize)){
+    case -1:
         return -1;
+    case 1:
+        strcpy(user.userName, username);
+        strcpy(user.password, password);
+        user.type = 100;
+        user.userId = 1;
+        users = (USERS *)malloc(sizeof(USERS));
+        updateUserData(&user, users, 1);
+        free(users);
+        return 1;
+    default:
+        USERS *check = NULL;
+        check = searchUsername(&users, listSize, username, &index);
+        if(check != NULL){
+            return 1;
+        }
+        strcpy(user.userName, username);
+        strcpy(user.password, password);
+        user.type = type;
+        user.userId = users[listSize].userId + 1;
+        updateUserData(&user, users, listSize + 1);
+        freeUserData(users);
+        break;
     }
-    USERS *user = addUser(username, password);
-    while(users->next != NULL){
-        endNode = users->next;
-    }
-    endNode->next = user;
-    updateUserData(users);
-    freeUserData(users);
-    return 1;
 }
 
 int updateUser(int id, char *username, char *password, int type){
-    int jumps = 0;
-    USERS *check = NULL;
+    int64_t userTotal = 0;
+    int64_t index = 0;
     USERS *users = NULL;
-    if(loadUserData(&users) != 0){
-        return -1;
-    }
-    USERS *user = searchId(users, id, &jumps);
-    if(user == NULL){
-        return -2;
-    }
-    if(username[0] != '\0'){
-        check = searchUsername(users, username);
-        if(check != NULL){
-            return -3;
+    USERS *user = NULL;
+    switch(loadUserData(&users, &userTotal)){
+        case -1:
+            return -1;
+        case 1:
+            return 1;
+        default:
+            user = searchId(&users, userTotal, id, &index);
+            if(!user)return 2;
+            if(username != NULL)
+                strcpy(users[index].userName, username);
+            if(password != NULL)
+                strcpy(users[index].password, password);
+            if(type > 0)
+                users[index].type = type;
+            updateUserData(NULL, users, userTotal);
+            freeUserData(users);
+            return 0;
         }
-        strcpy(user->userName, username);
-    }
-    if(password[0] != '\0'){
-        strcpy(user->password, password);
-    }
-    if(type > 0){
-        user->type = type;
-    }
-    return 1;
 }
 
-int deleteUser(int userId){
-    int jumps = 0;
+int deleteUser(int id){
+    int64_t listSize = 0;
+    int64_t index = 0;
     USERS *users = NULL;
-    if(loadUserData(&users) != 0){
-        return 0;
-    };
-    USERS *user = searchId(users, userId, &jumps);
-    if(user == NULL){
-        return -1;
-    }
-    USERS *prev = NULL;
-    if(users->next != NULL){
-        prev = users->next;
-    }else{
-        return 0;
-    }
-    for(int i = 0 ; i < jumps ; i++){
-        prev = prev->next;
-    }
-    prev->next = user->next;
-    user->next = NULL;
-    freeUserData(user);
-    updateUserData(users);
-    freeUserData(users);
-    return 1;
-}
-
-int userValidate(char *username,char *password){
-    USERS *userList = NULL;
-    if (loadUserData(&userList) == 0) {
-        USERS *current = userList;
-        while (current) {
-            if (strcmp(current->userName, username) == 0 && strcmp(current->password, password) == 0) {
-                freeUserData(userList);
-                return 1;
+    USERS *user = NULL;
+    switch(loadUserData(&users, &listSize)){
+        case -1:
+            return -1;
+        case 1:
+            return 1;
+        default:
+            user = searchId(&users, listSize, id, &index);
+            if(!user)return 0;
+            // aray[x] replaced with [x+n];
+            // because i dont know how to do it better kek;
+            if(index != listSize-1){
+                for(int i = index ; i < listSize-1 ; i++){
+                    users[i] = users[i+1];
+                }
             }
-            current = current->next;
-        }
-    } else {
-        freeUserData(userList);
-        printf("Failed to load user list from %s\n",dir);
-        return 0;
-     }
+            updateUserData(NULL, users, listSize-1);
+            freeUserData(users);
+            return 0;
+    }
+}
+
+USERS *userValidate(char *username,char *password){
+    USERS *users = NULL;
+    int64_t userTotal = 0;
+    int checks = 0;
+    USERS *user;
+    switch(loadUserData(&users, &userTotal)){
+        case -1:
+            return NULL;
+        case 1:
+            return NULL;
+        default:
+            for(int i = 0 ; i < userTotal ; i++){
+                checks = 0;
+                if(strcmp(users[i].userName, username) == 0){
+                    checks++;
+                }
+                if(strcmp(users[i].password, password) == 0){
+                    checks++;
+                }
+                if(checks == 2){
+                    strcpy(user->userName, users[i].userName);
+                    strcpy(user->password, users[i].password);
+                    user->type = users[i].type;
+                    user->userId = users[i].userId;
+                    break;
+                }
+            }
+            freeUserData(users);
+            return user;
+    }
 }
