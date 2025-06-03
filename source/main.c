@@ -6,7 +6,7 @@
 #include "../headers/menu.h"
 #include "../headers/userMiddleware/user.h"
 
-int login(USERS **user){
+int login(USERS *user){
     //todo create a function that searches for the user
     int attempts = 0;
     char username[256];
@@ -17,12 +17,12 @@ int login(USERS **user){
         fgets(username, 256, stdin);
         printf("Password:");
         fgets(password, 256, stdin);
-        *user = userValidate(username, password);
-        if(!user){
-            printf("username ou password erradas\n");
-            sleep(2);
-            attempts++;
+        if(userValidate(username, password, user) == 0){
+            return 0;
         }
+        printf("username ou password erradas\n");
+        sleep(2);
+        attempts++;
     }
     printf("voltar para start Menu\n");
     sleep(1);
@@ -33,7 +33,8 @@ int main(){
     char buffer[256];
     int programState = 0;
     int input;
-    USERS *user = NULL;
+    USERS user;
+    user = setUser();
     while(1){
         switch(programState){
             case 0:

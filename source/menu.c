@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ncurses.h>
 //#include "../headers/stringParse.h"
 #ifdef _WIN32
     #define syscls system("cls")

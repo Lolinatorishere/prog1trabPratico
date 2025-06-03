@@ -7,12 +7,14 @@ USERS *searchUsername(USERS **userList, int64_t listSize , char *username, int64
 
 USERS *searchId(USERS **userList, int64_t listSize, int id, int64_t *index) ;
 
+USERS setUser();
+
 int createUser(char *username, char *password, int type);
 
 int updateUser(int id, char *username, char *password, int type);
 
 int deleteUser(int userId);
 
-USERS *userValidate(char *username,char *password);
+int userValidate(char *username,char *password, USERS *user);
 
 #endif

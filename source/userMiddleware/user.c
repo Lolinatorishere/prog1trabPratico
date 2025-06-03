@@ -54,8 +54,13 @@ int loadUserData(USERS **userList, int64_t *userTotal) {
     USERS user;
     user = setUser();
     FILE *fp = fopen(dir, "rb");
-    if(!fp)
-        return -1;
+    if(!fp){
+        FILE *makeFile = fopen(dir, "wb");
+        fclose(makeFile);
+        fp = fopen(dir, "rb");
+        if(!fp)
+            return -1;
+    }
     fseek(fp, 0, SEEK_END);
     if(ftell(fp) == 0){
         fclose(fp);
@@ -102,7 +107,7 @@ int createUser(char *username, char *password, int type){
         user.type = 100;
         user.userId = 1;
         users = (USERS *)malloc(sizeof(USERS));
-        updateUserData(&user, users, 1);
+        updateUserData(&user, users, 0);
         free(users);
         return 1;
     default:
@@ -172,16 +177,16 @@ int deleteUser(int id){
     }
 }
 
-USERS *userValidate(char *username,char *password){
+int userValidate(char *username,char *password, USERS *user){
     USERS *users = NULL;
     int64_t userTotal = 0;
     int checks = 0;
-    USERS *user;
+    *user = setUser();
     switch(loadUserData(&users, &userTotal)){
         case -1:
-            return NULL;
+            return 1;
         case 1:
-            return NULL;
+            return 1;
         default:
             for(int i = 0 ; i < userTotal ; i++){
                 checks = 0;
@@ -200,6 +205,6 @@ USERS *userValidate(char *username,char *password){
                 }
             }
             freeUserData(users);
-            return user;
+            return 0;
     }
 }
