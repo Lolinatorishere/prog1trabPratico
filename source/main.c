@@ -9,14 +9,30 @@
 int login(USERS *user){
     //todo create a function that searches for the user
     int attempts = 0;
-    char username[256];
-    char password[256];
+    char username[256] = {'\0'};
+    char password[256] = {'\0'};
     while(attempts < 3){
         menuPrint("Login", 2, 1);
         printf("Nome:");
         fgets(username, 256, stdin);
+        if(strlen(username) == 0 || username[0] == '\n'){
+            printf("username cant be null\n");
+            sleep(1);
+            continue;
+        }
+        for(int i = strlen(username)-1 ; i < 256 ; i++){
+            username[i] = '\0';
+        }
         printf("Password:");
         fgets(password, 256, stdin);
+        if(strlen(password) == 0 || password[0] == '\n'){
+            printf("password cant be null\n");
+            sleep(1);
+            continue;
+        }
+        for(int i = strlen(password)-1 ; i < 256 ; i++){
+            password[i] = '\0';
+        }
         if(userValidate(username, password, user) == 0){
             return 0;
         }
@@ -32,9 +48,13 @@ int login(USERS *user){
 int main(){
     char buffer[256];
     int programState = 0;
+    int start = 0;
     int input;
     USERS user;
-    user = setUser();
+    if(start == 0){
+        user = setUser();
+        start = 1;
+    }
     while(1){
         switch(programState){
             case 0:
@@ -54,15 +74,29 @@ int main(){
                 }
                 break;
             case 2:
-                char *username = (char*) malloc(sizeof(char)*256);
-                char *password = (char*) malloc(sizeof(char)*256);
+                char username[256] = {'\0'};
+                char password[256] = {'\0'};
                 menuPrint("NewUser", 1, 1);
                 printf("username:");
                 fgets(username, 256, stdin);
-                username[strlen(username)] = '\0';
-                printf("password");
+                if(strlen(username) == 0 || username[0] == '\n'){
+                    printf("username cant be null\n");
+                    sleep(1);
+                    continue;
+                }
+                for(int i = strlen(username)-1 ; i < 256 ; i++){
+                    username[i] = '\0';
+                }
+                printf("password:");
                 fgets(password, 256, stdin);
-                password[strlen(username)] = '\0';
+                if(strlen(password) == 0 || password[0] == '\n'){
+                    printf("password cant be null\n");
+                    sleep(1);
+                    continue;
+                }
+                for(int i = strlen(password)-1 ; i < 256 ; i++){
+                    password[i] = '\0';
+                }
                 switch(createUser(username,password, 0)){
                 case 1:
                     printf("\nuser %s criado com sucesso\n", username);
@@ -78,14 +112,10 @@ int main(){
                     sleep(1);
                     break;
                 default:
-                    free(username);
-                    free(password);
                     printf("that was an issue");
                     sleep(1);
                     return -1;
                 }
-                free(username);
-                free(password);
                 programState = 0;
                 break;
             default: 

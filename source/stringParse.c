@@ -25,7 +25,6 @@ int stringReplace(char *input, char *filter, char *replace){
     free(buffer);
     return 0;
 }
-
 //int intNumberInput(char *input, int *output);
 
 int64_t int64FromString(char *input){
