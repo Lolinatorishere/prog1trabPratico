@@ -103,11 +103,11 @@ int main(){
                     programState = 0;
                     sleep(1);
                     break;
-                case -1:
+                case 0:
                     printf("\n%s ja existe\n", username);
                     sleep(1);
                     break;
-                case 0:
+                case -1:
                     printf("\nHouve um erro a carregar os utilizadores\n");
                     sleep(1);
                     break;
@@ -122,4 +122,4 @@ int main(){
                 return 0;
         }
     }
-}
+    }

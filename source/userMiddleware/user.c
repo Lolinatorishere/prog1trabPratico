@@ -32,38 +32,33 @@ void copyUser(USERS *dst, USERS src){
     dst[0].userId = src.userId;
 }
 
-USERS *searchUsername(USERS **userList, int64_t listSize , char *username, int64_t *index) {
+USERS *searchUsername(USERS *userList, int64_t listSize , char *username, int64_t *index) {
     for(int64_t i = 0 ; i < listSize ; i++){
-        if(strcmp(userList[i]->userName, username) == 0){
+        if(strcmp(userList[i].userName, username) == 0){
             *index = i;
-            return userList[i];
+            return &userList[i];
         }
     }
     return NULL;
 }
 
-USERS *searchId(USERS **userList, int64_t listSize, int id, int64_t *index) {
+USERS *searchId(USERS *userList, int64_t listSize, int id, int64_t *index) {
     for(int64_t i = 0 ; i < listSize ; i++){
-        if(userList[i]->userId == id){
+        if(userList[i].userId == id){
             *index = i;
-            return userList[i];
+            return &userList[i];
         }
     }
     return NULL;
 }
 
-int updateUserData(USERS user, USERS **userList, int64_t listSize, int addUser){
-    int64_t size = listSize;
+int updateUserData(USERS userList[], int64_t listSize){
     FILE *fp = fopen(dir, "wb");
     if(!fp)
         return -1;
-    if(addUser == 1){
-        size += 1;
-    }
-    if(fwrite(&size, sizeof(int64_t), 1, fp) != 1 ) return -1;
-    if(fwrite(userList, sizeof(USERS), size, fp) != size) return -1;
-    if(addUser == 1){
-        if(fwrite(&user, sizeof(USERS), 1, fp) != 1 )return -1;
+    if(fwrite(&listSize, sizeof(int64_t), 1, fp) != 1 ) return -1;
+    for(int i = 0 ; i < listSize ; i++){
+        if(fwrite(&userList[i], sizeof(USERS), 1, fp) != 1) return -1;
     }
     fclose(fp);
     return 1;
@@ -82,7 +77,7 @@ int64_t readTotalUsers(){
     fseek(fp, 0, SEEK_END);
     if(ftell(fp) == 0){
         fclose(fp);
-        return 1;
+        return 0;
     }
     fseek(fp, 0, SEEK_SET);
     fread(&totalUsers, sizeof(int64_t), 1, fp);
@@ -91,29 +86,25 @@ int64_t readTotalUsers(){
     return totalUsers;
 }
 
-int loadUserData(USERS **userList, int64_t userTotal) {
-    if(userTotal < 1)
-        return -1;
-    int64_t filesize = 0;
-    USERS user;
-    user = setUser();
+int loadUserData(USERS *userList) {
     FILE *fp = fopen(dir, "rb");
-    if(!fp){
-        FILE *makeFile = fopen(dir, "wb");
-        fclose(makeFile);
-        fp = fopen(dir, "rb");
-        if(!fp)
-            return -1;
-    }
+    if(!fp) return -1;
     fseek(fp, 0, SEEK_END);
     if(ftell(fp) == 0){
         fclose(fp);
         return 1;
     }
     fseek(fp, 0, SEEK_SET);
-    fread(&filesize, sizeof(int64_t), 1, fp);
-    fread(*userList, sizeof(USERS)*userTotal, 1, fp);
-    //copyUser(userList[i], user);
+    int64_t userTotal = 0;
+    fread(&userTotal, sizeof(int64_t), 1, fp);
+    if(userTotal == 0){
+        fclose(fp);
+        return 1;
+    }
+    for(int i = 0 ; i < userTotal ; i++){
+        fread(&userList[i], sizeof(USERS), 1, fp);
+    }
+    //fread(userList, sizeof(USERS), userTotal, fp);
     fclose(fp);
     return 0;
 }
@@ -129,41 +120,36 @@ void freeUserData(USERS **userList, int64_t userListSize) {
 }
 
 int createUser(char *username, char *password, int type){
+    int64_t userTotal = readTotalUsers();
+    USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
     int64_t index = 0;
-    int64_t userTotal = 0;
-    userTotal = readTotalUsers();
-    USERS *users = (USERS *)malloc(sizeof(USERS) * userTotal);
-    if(users == NULL){ 
-        return -1;
-    }
-    USERS user;
-    user = setUser();
-    switch(loadUserData(&users, userTotal)){
-    case -1:
-        return 0;
-    case 1:
-        strcpy(user.userName, username);
-        strcpy(user.password, password);
-        user.type = 100;
-        user.userId = 1;
-        copyUser(users, user);
-        updateUserData(user, &users, 1, 0);
-        freeUserData(&users, userTotal); return 1;
-    default:
-        USERS *check = NULL;
-        check = searchUsername(&users, userTotal, username, &index);
-        if(check != NULL){
+    switch(loadUserData(users)){
+        case 0:
+            if(searchUsername(users, userTotal, username, &index) != NULL){
+                free(users);
+                return 0;
+            }
+            break;
+        case -1:
+            free(users);
             return -1;
-        }
-        strcpy(user.userName, username);
-        strcpy(user.password, password);
-        user.type = type;
-        user.userId = users[userTotal-1].userId + 1;
-        updateUserData(user, &users, userTotal, 1);
-        freeUserData(&users, userTotal);
-        return 1;
-        break;
+        default:
+            break;
     }
+    USERS *newUser = &users[userTotal];
+    strncpy(newUser->userName, username, 255);
+    newUser->userName[255] = '\0';
+    strncpy(newUser->password, password, 255);
+    newUser->password[255] = '\0';
+    if (userTotal == 0) newUser->type = 100;
+    else newUser->type = type;
+    if (userTotal == 0) newUser->userId = 1;
+    else newUser->userId = users[userTotal - 1].userId + 1;
+    userTotal++;
+    if(updateUserData(users, userTotal) == -1)
+        return -1;
+    free(users);
+    return 1;
 }
 
 int updateUser(int id, char *username, char *password, int type){
@@ -176,13 +162,13 @@ int updateUser(int id, char *username, char *password, int type){
     if(users == NULL){ 
         return -1;
     }
-    switch(loadUserData(&users, userTotal)){
+    switch(loadUserData(users)){
         case -1:
             return -1;
         case 1:
             return 1;
         default:
-            check = searchId(&users, userTotal, id, &index);
+            check = searchId(users, userTotal, id, &index);
             if(!check)return 2;
             if(username != NULL)
                 strcpy(users[index].userName, username);
@@ -190,7 +176,7 @@ int updateUser(int id, char *username, char *password, int type){
                 strcpy(users[index].password, password);
             if(type > 0)
                 users[index].type = type;
-            updateUserData(user, &users, userTotal, 0);
+            updateUserData(users, userTotal);
             freeUserData(&users, userTotal);
             return 0;
         }
@@ -200,19 +186,18 @@ int deleteUser(int id){
     int64_t index = 0;
     USERS *check = NULL;
     USERS user;
-    int64_t userTotal = 0;
-    userTotal = readTotalUsers();
+    int64_t userTotal = readTotalUsers();
     USERS *users = (USERS *)malloc(sizeof(USERS) * userTotal);
     if(users == NULL){ 
         return -1;
     }
-    switch(loadUserData(&users, userTotal)){
+    switch(loadUserData(users)){
         case -1:
             return -1;
         case 1:
             return 1;
         default:
-            check = searchId(&users, userTotal, id, &index);
+            check = searchId(users, userTotal, id, &index);
             if(!check)return 0;
             // aray[x] replaced with [x+n];
             // because i dont know how to do it better kek;
@@ -221,7 +206,7 @@ int deleteUser(int id){
                     users[i] = users[i+1];
                 }
             }
-            updateUserData(user, &users, userTotal-1, 0);
+            updateUserData(users, userTotal-1);
             freeUserData(&users, userTotal);
             return 0;
     }
@@ -236,7 +221,7 @@ int userValidate(char *username,char *password, USERS *user){
         return -1;
     }
     *user = setUser();
-    switch(loadUserData(&users, userTotal)){
+    switch(loadUserData(users)){
         case -1:
             return 1;
         case 1:
