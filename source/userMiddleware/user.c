@@ -104,19 +104,14 @@ int loadUserData(USERS *userList) {
     for(int i = 0 ; i < userTotal ; i++){
         fread(&userList[i], sizeof(USERS), 1, fp);
     }
-    //fread(userList, sizeof(USERS), userTotal, fp);
     fclose(fp);
     return 0;
 }
 
 void freeUserData(USERS **userList, int64_t userListSize) {
-    if(userList == NULL)
+    if(!userList)
         return;
     free(*userList);
-    //for(int i = 0 ; i < userListSize ; i++){
-    //    if(userList[i] == NULL) continue;
-    //    free(userList[i]);
-    //}
 }
 
 int createUser(char *username, char *password, int type){
@@ -153,13 +148,10 @@ int createUser(char *username, char *password, int type){
 }
 
 int updateUser(int id, char *username, char *password, int type){
-    int64_t userTotal = 0;
     int64_t index = 0;
-    USERS *check = NULL;
-    USERS user;
-    userTotal = readTotalUsers();
-    USERS *users = (USERS *)malloc(sizeof(USERS) * userTotal);
-    if(users == NULL){ 
+    int64_t userTotal = readTotalUsers();
+    USERS *users = malloc(sizeof(USERS) * (userTotal+1));
+    if(!users){ 
         return -1;
     }
     switch(loadUserData(users)){
@@ -168,18 +160,26 @@ int updateUser(int id, char *username, char *password, int type){
         case 1:
             return 1;
         default:
-            check = searchId(users, userTotal, id, &index);
-            if(!check)return 2;
-            if(username != NULL)
+            if(!searchId(users, userTotal, id, &index)){
+                free(users);
+                return 2;
+            } 
+            if(username != NULL){
+                int64_t data = 0;
+                if(searchUsername(users, userTotal, username, &data) != NULL) {
+                    free(users);
+                    return 2;
+                }
                 strcpy(users[index].userName, username);
+            }
             if(password != NULL)
                 strcpy(users[index].password, password);
             if(type > 0)
                 users[index].type = type;
             updateUserData(users, userTotal);
-            freeUserData(&users, userTotal);
+            free(users);
             return 0;
-        }
+    }
 }
 
 int deleteUser(int id){
@@ -187,8 +187,8 @@ int deleteUser(int id){
     USERS *check = NULL;
     USERS user;
     int64_t userTotal = readTotalUsers();
-    USERS *users = (USERS *)malloc(sizeof(USERS) * userTotal);
-    if(users == NULL){ 
+    USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
+    if(!users){ 
         return -1;
     }
     switch(loadUserData(users)){
@@ -197,8 +197,10 @@ int deleteUser(int id){
         case 1:
             return 1;
         default:
-            check = searchId(users, userTotal, id, &index);
-            if(!check)return 0;
+            if(!searchId(users, userTotal, id, &index)){
+                free(users);
+                return 0;
+            }
             // aray[x] replaced with [x+n];
             // because i dont know how to do it better kek;
             if(index != userTotal-1){
@@ -207,7 +209,7 @@ int deleteUser(int id){
                 }
             }
             updateUserData(users, userTotal-1);
-            freeUserData(&users, userTotal);
+            free(users);
             return 0;
     }
 }
@@ -216,8 +218,8 @@ int userValidate(char *username,char *password, USERS *user){
     int64_t userTotal = 0;
     int checks = 0;
     userTotal = readTotalUsers();
-    USERS *users = (USERS *)malloc(sizeof(USERS) * userTotal);
-    if(users == NULL){ 
+    USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
+    if(!users){ 
         return -1;
     }
     *user = setUser();
@@ -248,6 +250,7 @@ int userValidate(char *username,char *password, USERS *user){
                 break;
             }
             freeUserData(&users, userTotal);
+            if(user->type == -1) return -1;
             return 0;
     }
 }

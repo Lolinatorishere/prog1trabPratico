@@ -34,6 +34,8 @@ int login(USERS *user){
             password[i] = '\0';
         }
         if(userValidate(username, password, user) == 0){
+            printf("Bem vindo %s\n", user->userName);
+            sleep(2);
             return 0;
         }
         printf("username ou password erradas\n");
