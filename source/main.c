@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../headers/stringParse.h"
-#include "../headers/menu.h"
-#include "../headers/userMiddleware/user.h"
+#include "../headers/Middleware/stringParse.h"
+#include "../headers/Middleware/menu.h"
+#include "../headers/Middleware/user.h"
 
 int login(USERS *user){
     //todo create a function that searches for the user
@@ -36,7 +36,7 @@ int login(USERS *user){
         if(userValidate(username, password, user) == 0){
             printf("Bem vindo %s\n", user->userName);
             sleep(2);
-            return 0;
+            return 1;
         }
         printf("username ou password erradas\n");
         sleep(2);
@@ -119,6 +119,19 @@ int main(){
                     return -1;
                 }
                 programState = 0;
+                break;
+            case 3:
+                if(user.type >= 100){
+                    menuPrint("Admin", 1, 1);
+                }else{
+                    menuPrint("User", 1, 1);
+                }
+                printf("input:");
+                fgets(buffer, 256, stdin);
+                input = int64FromString(buffer);
+                if(user.type >= 100){
+                    
+                }
                 break;
             default: 
                 return 0;

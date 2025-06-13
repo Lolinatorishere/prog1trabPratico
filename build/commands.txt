@@ -1,1 +1,1 @@
-gcc ./source/main.c ./source/stringParse.c ./source/userMiddleware/user.c ./source/menu.c -g -o ./main.out -lncurses
+gcc ./source/main.c ./source/Middleware/stringParse.c ./source/Middleware/user.c ./source/Middleware/menu.c -g -o ./main.out -lncurses
