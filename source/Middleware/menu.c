@@ -99,14 +99,25 @@ int readMenuFile(char *menuSection, char **menuText){
     return 0;
 }
 
-int menuPrint(char *menuSection, int padding_top, int padding_bottom){
+void printToScreen(char *input, int padding_top, int padding_bottom){
     syscls;
-    char *menuText = NULL;
-    if(readMenuFile(menuSection, &menuText) != 0) return -1;
     dynamic_begin_text(TXT_CONST, INDENT, MARGIN);
     dynamic_linespace(TXT_CONST, INDENT, MARGIN, padding_top);
-    dynamic_line_print(menuText, TXT_CONST, INDENT, MARGIN);
+    dynamic_line_print(input, TXT_CONST, INDENT, MARGIN);
     dynamic_linespace(TXT_CONST, INDENT, MARGIN, padding_bottom);
     dynamic_end_text(TXT_CONST, INDENT, MARGIN);
+}
+
+int menuPrint(char *menuSection, int padding_top, int padding_bottom){
+    char *menuText = NULL;
+    if(readMenuFile(menuSection, &menuText) != 0) return -1;
+    printToScreen(menuText, padding_top, padding_bottom);
     free(menuText);
+    return 0;
+}
+
+int advancedPrint(char *input, int padding_top, int padding_bottom){
+    if(input == NULL) return -1;
+    printToScreen(input, padding_top, padding_bottom);
+    return 0;
 }
