@@ -46,26 +46,25 @@ void dynamic_line_print(char *string, int text_const, int txt_indent, int txt_ma
     int arraysize = strlen(string);
     if(arraysize == 0) return;
     if(text_const == 0) text_const = 1;
-    char space[1] = " ";
-    char buffer[256] = {'\0'};
+    char space = ' ';
     int i = 0, j = 0;
-    printf("|%*c", txt_indent, space[0]);
+    printf("|%*c", txt_indent, space);
     for(i = 0 ; i <= arraysize; i++){
         if(string[i] == '\n' && i+1 != arraysize){
-            printf("%*c|\n", text_const-j + txt_margin, space[0]);
+            printf("%*c|\n", text_const-j + txt_margin, space);
             j = 0;
-            printf("|%*c", txt_indent, space[0]);
+            printf("|%*c", txt_indent, space);
             continue;
         }
         if(j >= text_const){
-            printf("%*c|\n", text_const-j + txt_margin, space[0]);
-            printf("|%*c", txt_indent, space[0]);
+            printf("%*c|\n", text_const-j + txt_margin, space);
+            printf("|%*c", txt_indent, space);
             i--;
             j = 0;
             continue;
         }
         if(i+1 == arraysize){
-            printf("%*c|\n", text_const-j + txt_margin, space[0]);
+            printf("%*c|\n", text_const-j + txt_margin, space);
             continue;
         }
         j++;
@@ -89,12 +88,16 @@ int readMenuFile(char *menuSection, char **menuText){
         return -1;
     }
     fseek(fp, 0, SEEK_SET);
-    *menuText = malloc(sizeof(char) * filesize);
-    if(!menuText)return -1;
+    *menuText = malloc(sizeof(char) * filesize + 1);
+    if(!menuText){
+        fclose (fp);
+        return -1;
+    }
     for(int i = 0 ; i < filesize ; i++){
         fseek(fp, i, SEEK_SET);
         (*menuText)[i] = fgetc(fp);
     }
+    (*menuText)[filesize] = '\0';
     fclose(fp);
     return 0;
 }
