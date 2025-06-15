@@ -2,16 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ncurses.h>
-//#include "../headers/stringParse.h"
-#ifdef _WIN32
-    #define syscls system("cls")
-#endif
-#ifdef __linux__
-    #define syscls system("clear")
-#endif
-#define TXT_CONST 56
-#define INDENT 4
-#define MARGIN 4
+#include "../../headers/defs.h"
 
 //prints a line of "space" aka " "
 void dynamic_linespace(int text_constant, int txt_indent, int txt_margin, int lines){

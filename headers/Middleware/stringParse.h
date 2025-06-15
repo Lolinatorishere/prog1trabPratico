@@ -6,6 +6,8 @@
 */
 int stringReplace(char *input, char *filter, char *replace);
 
+int centerString(int size, char **text);
+
 //int intNumberInput(char *input, int *output);
 
 int64_t int64FromString(char *input);

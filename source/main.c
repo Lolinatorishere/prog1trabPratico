@@ -22,7 +22,7 @@ void login(USERS *user, int *programState){
     char username[256] = {'\0'};
     char password[256] = {'\0'};
     while(attempts < 3){
-        menuPrint("Login", 2, 1);
+        menuPrint("Login", 1, 1);
         printf("Nome:");
         fgets(username, 256, stdin);
         if(strlen(username) == 0 || username[0] == '\n'){
@@ -60,7 +60,7 @@ void login(USERS *user, int *programState){
 
 void startUI(int *programState){
     char buffer[256];
-    menuPrint("StartUI", 1, 2);
+    menuPrint("StartUI", 1, 1);
     printf("input:");
     fgets(buffer, 256, stdin);
     int64_t input = int64FromString(buffer);
@@ -249,6 +249,13 @@ int main(){
             case 101://ver utiliadores
                 break;
             case 102:
+                char buffer[256] = {'\0'};
+                char *userChar = NULL;
+                if(createUserString(&userChar, 5, 0)!=0) programState = 100;
+                advancedPrint(userChar, 1, 1);
+                free(userChar);
+                fgets(buffer, 256, stdin);
+                programState = 100;
                 break;
             case 103:
                 break;

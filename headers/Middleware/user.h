@@ -17,4 +17,6 @@ int deleteUser(int userId);
 
 int userValidate(char *username,char *password, USERS *user);
 
+int createUserString(char **string, int usersPerPage, int page);
+
 #endif

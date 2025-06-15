@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../headers/structs.h"
+#include "../../headers/Middleware/stringParse.h"
 #define dir "./data/userData.dat"
+#include "../../headers/defs.h"
 
 USERS setUser(){
     USERS user;
@@ -245,5 +247,90 @@ int userValidate(char *username,char *password, USERS *user){
     }
     freeUserData(&users);
     if(user->type < 0) return -1;
+    return 0;
+}
+
+int createUserString(char **string, int usersPerPage, int page){
+    int64_t userTotal = readTotalUsers();
+    if(page > userTotal)return -1;
+    USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
+    if(loadUserData(users) != 0){
+        freeUserData(&users);
+        return -1;
+    }
+    if(!users)return -2;
+    //64 for special chars like |,/,\,_,\n name, type, pwd and id
+    // 256 * 2 name and pwd, 64, 32 for type and 32 for id all in chars
+    // 700 total for securitiy reasons, dont want buffer overflows
+    *string = malloc(sizeof(char) * (usersPerPage * (700)));
+    if(!string){
+        freeUserData(&users);
+        return -3;
+    }
+    /*
+     * / Id:id
+     * | Type: type
+     * | name:
+     * \ pwd:
+    */
+    int index = 0;
+    char buffer[TXT_CONST];
+    int ut_id = strlen(" / Id:");
+    int ut_type = strlen(" | Type:");
+    int ut_name = strlen(" | Name:");
+    int ut_pwd = strlen(" \\ Pwd:");
+    int wrap_sexy = 0;
+    if(TXT_CONST-ut_name <= ut_name){
+        freeUserData(&users);
+        return -4;
+    }
+    for(int i = (page * usersPerPage); i < usersPerPage + (page * usersPerPage); i++){
+        if(i >= userTotal) break;
+        USERS user = users[i];
+        strcat((*string), " / Id:"); index += ut_id;
+        sprintf(buffer, "%i\n", user.userId);
+        strcat((*string), buffer); index += strlen(buffer);
+        strcat((*string), " | Type:"); index += ut_type;
+        sprintf(buffer, "%i\n", user.type);
+        strcat((*string), buffer); index += strlen(buffer);
+        strcat((*string), " | Name:"); index += ut_name;
+        int name_len = strlen(user.userName);
+        if(name_len < TXT_CONST-ut_name){
+            strcat((*string), user.userName); index += name_len;
+        }else{
+            for(int j = 0; j < name_len ; j++){
+                (*string)[j+index] = user.userName[j];
+                if(j%TXT_CONST-ut_name == 0){
+                    strcat((*string), " |      "); index += ut_name;
+                    continue;
+                }
+                index++;
+            }
+        }
+        strcat((*string), "\n"); index++;
+        int pwd_len = strlen(user.password);
+        if(pwd_len < TXT_CONST-ut_pwd){
+            strcat((*string), " \\ Pwd:"); index += ut_pwd;
+            strcat((*string), user.password); index += pwd_len;
+        }else{
+            strcat((*string), " | Pwd:"); index += ut_pwd;
+            for(int j = 0; j < pwd_len; j++){
+                (*string)[j+index] = user.password[j];
+                if(j%TXT_CONST-ut_name == 0){
+                    if(pwd_len - j < TXT_CONST - ut_pwd){
+                        strcat((*string), " \\     "); index += ut_pwd;
+                    }else{
+                        strcat((*string), " |     "); index += ut_pwd;
+                    }
+                    continue;
+                }
+                index++;
+            }
+        }
+        strcat((*string), "\n"); index++;
+    }
+    (*string)[index]='\0';
+    (*string)[index+1]='\0';
+    freeUserData(&users);
     return 0;
 }
