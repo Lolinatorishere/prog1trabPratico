@@ -3,16 +3,15 @@
 todo:
 Auth System:
 Frontend:
-    [] create a user prompt in the begining
-        [] create new user with login and pwd
-            [] checks for users in system when creating new user
-            [] requires unique username
-            [] requires password
+    [x] create a user prompt in the begining
+        [x] create new user with login and pwd
+            [x] checks for users in system when creating new user
+            [x] requires unique username
+            [x] requires password
             [] requires confirmation of password
             [] NULL input returns to previous menu
-        [] login area
-            [] 3 errors and user is kicked from the program
-            [] NULL input returns to previous menu
+        [x] login area
+            [x] 3 errors and user is kicked from the login
 Backend:  
     [x] user input sanitization system for inputs 
         [x] header file

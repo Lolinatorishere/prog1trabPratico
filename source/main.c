@@ -210,6 +210,19 @@ void userAdmin(USERS user, int *programState){
     }
 }
 
+int userIndexMenu(int *programState){
+    int page = 0;
+    char *menuText = NULL;
+    char buffer[256] = {'\0'};
+    //handle extras
+    showAllUsers(&menuText, 5, page);
+
+    advancedPrint(menuText, 1, 1);
+    //handle menuInput
+    fgets(buffer, 256, stdin);
+    *programState = 100;
+}
+
 int main(){
     int programState = 0;
     int start = 0;
@@ -246,20 +259,18 @@ int main(){
                 //2 - Ver Utilizadores registados
                 //3 - Alterar utilizador registado
                 //4 - Apagar Utilizador do Sistema
-            case 101://ver utiliadores
+                //5 - procurar utilizador
+            case 101:
                 break;
             case 102:
-                char buffer[256] = {'\0'};
-                char *userChar = NULL;
-                if(createUserString(&userChar, 5, 0)!=0) programState = 100;
-                advancedPrint(userChar, 1, 1);
-                free(userChar);
-                fgets(buffer, 256, stdin);
-                programState = 100;
+                userIndexMenu(&programState);
                 break;
             case 103:
                 break;
             case 104:
+                break;
+            case 105:// search specific user;
+                //userSearchMenu(&programState);
                 break;
             //2 - Administrar Cursos
             case 200:
