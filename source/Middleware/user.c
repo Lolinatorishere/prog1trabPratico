@@ -327,7 +327,7 @@ int addPageInfo(char **string, int page, int usersPerPage, int userTotal){
     char pagetotal[1024] = {'\0'};
     int maxUserPrint = 0;
     int maxPages = userTotal/usersPerPage;
-    sprintf(pageExtras, "+ pagina seguinte \n- pagina anterior\n");
+    sprintf(pageExtras, "\n+ pagina seguinte \n- pagina anterior\n");
     if(userTotal%usersPerPage != 0) maxPages++;
     if((page+1) * usersPerPage > userTotal){
         maxUserPrint = userTotal;
@@ -335,26 +335,36 @@ int addPageInfo(char **string, int page, int usersPerPage, int userTotal){
         maxUserPrint = usersPerPage*(page+1);
     }
     sprintf(pageCur,"pagina %i de %i", (page+1), maxPages);
-    sprintf(pageInfo,"users %i a %i\n", (page*usersPerPage)+1, maxUserPrint);
+    sprintf(pageInfo,"users %i a %i", (page*usersPerPage)+1, maxUserPrint);
     if(strlen(pageCur) + strlen(pageInfo) < TXT_CONST){
-        //centerString(TXT_CONST/2, pageCur);
-        //centerString(TXT_CONST/2, pageInfo);
+        centerString(TXT_CONST/2, pageCur);
+        centerString(TXT_CONST/2, pageInfo);
         strcat(pagetotal, pageCur);
         pagetotal[strlen(pageCur)] = '|';
         strcat(pagetotal, pageInfo);
     }else{
+        pageCur[strlen(pageCur)+1] = '\n';
+        pageCur[strlen(pageCur)+2] = '\0';
         strcat(pagetotal, pageCur);
-        pagetotal[strlen(pageCur)] = '\n';
+        pageCur[strlen(pageInfo)+1] = '\n';
+        pageCur[strlen(pageInfo)+2] = '\0';
         strcat(pagetotal, pageInfo);
     }
-    strcat(pagetotal, pageExtras);
+    strcat(pagetotal, "\n");
+    strcat(pagetotal, "\n");
     //32 for safety reasons;
-    char *temp = realloc((*string), sizeof(char) * (strlen((*string)) + strlen(pagetotal) + 32));
-    if(!temp){
+    char *move = malloc(sizeof(char)*strlen((*string)));
+    if(!move)
         return -1;
-    }
+    strcpy(move, (*string));
+    char *temp = realloc((*string), sizeof(char) * (strlen((*string)) + strlen(pagetotal) + strlen(pageExtras) + 32));
+    if(!temp)
+        return -1;
     (*string) = temp;
-    strcat((*string), pagetotal);
+    strcpy((*string), pagetotal);
+    strcat((*string), move);
+    strcat((*string), pageExtras);
+    free(move);
     return 0;
 }
 
