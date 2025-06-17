@@ -200,9 +200,11 @@ void userAdmin(USERS user, int *programState){
     case 4:
         *programState = 104;
         return;
+    case 5:
+        *programState = 105;
+        return;
     case 0:
         *programState = 3;
-        returnText("Main Menu", 3);
         return;
     default:
         *programState = 100;
@@ -210,7 +212,7 @@ void userAdmin(USERS user, int *programState){
     }
 }
 
-int userIndexMenu(int *programState){
+void userIndexMenu(int *programState){
     int page = 0;
     char *menuText = NULL;
     char buffer[256] = {'\0'};
@@ -221,6 +223,70 @@ int userIndexMenu(int *programState){
     //handle menuInput
     fgets(buffer, 256, stdin);
     *programState = 100;
+    if(menuText != NULL) free(menuText);
+}
+
+void usernameSearch(int *programState){
+    char search[256] = {'\0'};
+    char *menuText = NULL;
+    int64_t input = 0;
+    int page = 0;
+    advancedPrint("Pesquizar pelo utilizador", 1, 1);
+    printf("username:");
+    fgets(search,256, stdin);
+    search[strlen(search)] = '\0';
+    searchForUsername(&menuText, search, 5, page);
+    advancedPrint(menuText, 1, 1);
+    if(menuText != NULL) free(menuText);
+    fgets(search,256, stdin);
+    input = int64FromString(search);
+    if(input == 0) *programState = 105;
+    return;
+}
+
+void idSearch(int *programState){
+    char buffer[256] = {'\0'};
+    char *menuText = NULL;
+    int64_t input = 0;
+    int page = 0;
+    advancedPrint("Pesquizar pelo utilizador", 1, 1);
+    printf("user ID:");
+    fgets(buffer,256, stdin);
+    input = int64FromString(buffer);
+    searchForUserId(&menuText, input, 5, page);
+    advancedPrint(menuText, 1, 1);
+    if(menuText != NULL) free(menuText);
+    fgets(buffer,256, stdin);
+    input = int64FromString(buffer);
+    if(input == 0) *programState = 105;
+    return;
+}
+
+void userSearchMenu(int *programState){
+    char *menuText = NULL;
+    char buffer[256] = {'\0'};
+    menuPrint("searchUser", 1, 1);
+    //handle menuInput
+    fgets(buffer, 256, stdin);
+    int64_t input = int64FromString(buffer);
+    switch(input){
+    //1 - Username
+    //2 - Id user
+    //3 - Tipo user
+    //0 - sair
+    case 1:
+        *programState = 10501;
+        return;
+    case 2:
+        *programState = 10502;
+        return;
+    case 3:
+        *programState = 10503;
+        return;
+    default:
+        *programState = 100;
+        return;
+    }
 }
 
 int main(){
@@ -235,49 +301,56 @@ int main(){
         switch(programState){
             case 0:
                 startUI(&programState);
-                break;
+                continue;
             case 1:
                 login(&user, &programState);
-                break;
+                continue;
             case 2:
                 NewUser(&programState);
-                break;
+                continue;
             case 3:
                 LoggedIn(&user, &programState);
-                break;
+                continue;
             case 10:
-                break;
+                continue;
             case 20:
-                break;
+                continue;
             case 30:
-                break;
+                continue;
                 //1 - Administrar Utilizadores
             case 100:
                 userAdmin(user, &programState);
-                break;
+                continue;
                 //1 - Criar Um Novo Utilizador
                 //2 - Ver Utilizadores registados
                 //3 - Alterar utilizador registado
                 //4 - Apagar Utilizador do Sistema
                 //5 - procurar utilizador
             case 101:
-                break;
+                continue;
             case 102:
                 userIndexMenu(&programState);
-                break;
+                continue;
             case 103:
-                break;
+                continue;
             case 104:
-                break;
+                continue;
             case 105:// search specific user;
-                //userSearchMenu(&programState);
-                break;
+                userSearchMenu(&programState);
+                continue;
+            case 10501:
+                usernameSearch(&programState);
+                continue;
+            case 10502:
+                idSearch(&programState);
+                continue;
+            continue;
             //2 - Administrar Cursos
             case 200:
-                break;
+                continue;
             //3 - Gerir Candidaturas
             case 300:
-                break;
+                continue;
             default: 
                 return 0;
         }

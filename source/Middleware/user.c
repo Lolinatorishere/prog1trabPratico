@@ -44,14 +44,21 @@ USERS *searchUsername(USERS *userList, int64_t listSize , char *username, int64_
     return NULL;
 }
 
+//This is assuming the ids in the List are sequential
 USERS *searchId(USERS *userList, int64_t listSize, int id, int64_t *index) {
-    for(int64_t i = 0 ; i < listSize ; i++){
-        if(userList[i].userId == id){
-            *index = i;
-            return &userList[i];
+    int64_t low = 0, high = listSize - 1;
+    while (low <= high) {
+        int64_t mid = low + (high - low) / 2;
+        if (userList[mid].userId == id) {
+            *index = mid;
+            return &userList[mid];
+        } else if (userList[mid].userId < id) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
         }
     }
-    return NULL;
+    return NULL; 
 }
 
 int updateUserData(USERS userList[], int64_t listSize){
@@ -121,7 +128,7 @@ void freeUserData(USERS **userList) {
 int createUserString(char **string, USERS *users,int userTotal, int usersPerPage, int page){
     //64 for special chars like |,/,\,_,\n name, type, pwd and id
     // 256 * 2 name and pwd, 64, 32 for type and 32 for id all in chars
-    // 700 total for securitiy reasons, dont want buffer overflows
+    // 700 total for memory reasons, dont want buffer overflows
     *string = malloc(sizeof(char) * (usersPerPage * (700)));
     /*
      * / Id:id
@@ -135,7 +142,7 @@ int createUserString(char **string, USERS *users,int userTotal, int usersPerPage
     int ut_type = strlen(" | Type:");
     int ut_name = strlen(" | Name:");
     int ut_pwd = strlen(" \\ Pwd:");
-    int wrap_sexy = 0;
+    strcpy((*string), "\0");
     if(TXT_CONST-ut_name <= ut_name)return -1;
     for(int i = (page * usersPerPage); i < usersPerPage + (page * usersPerPage); i++){
         if(i >= userTotal) break;
@@ -382,14 +389,41 @@ int showAllUsers(char **string, int usersPerPage, int page){
         freeUserData(&users);
         return -1;
     }
-    if(addPageInfo(string,page,usersPerPage,userTotal) != 0){
+    if(addPageInfo(string, page, usersPerPage, userTotal) != 0){
         freeUserData(&users);
-        if(!string) free((*string));
+        if(string != NULL) free((*string));
         return -1;
     }
+    freeUserData(&users);
+    return 0;
 }
 
 int searchForUsername(char **string, char *search, int usersPerPage, int page){
+    int64_t userTotal = readTotalUsers();
+    if(userTotal == 0) return -1;
+    return 0;
+}
+
+int searchForUserId(char **string, int search, int usersPerPage, int page){
+    int64_t userTotal = readTotalUsers();
+    USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
+    int64_t index = 0;
+    if(userTotal == 0) return -1;
+    if(loadUserData(users) != 0){
+        freeUserData(&users);
+        return 1;
+    }
+    USERS *user = searchId(users, userTotal, search, &index);
+    if(user == NULL){
+        (*string) = malloc(sizeof(char) * 64);
+        strcpy((*string), "Utilizador Nao Existe\n");
+    }else{
+        if(createUserString(string, user, 1, 1, 0) != 0){
+            freeUserData(&users);
+            return -1;
+        }
+    }
+    freeUserData(&users);
     return 0;
 }
 
@@ -398,8 +432,12 @@ int getUserWithId(USERS *user, int id){
     int64_t userTotal = readTotalUsers();
     int64_t index = 0;
     USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
+    if(loadUserData(users) != 0){
+        freeUserData(&users);
+        return 1;
+    }
     user = searchId(users, userTotal, id, &index);
-    free(users);
+    freeUserData(&users);
     if(user == NULL)return -1;
     return 0;
 }
