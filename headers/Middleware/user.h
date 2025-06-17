@@ -13,7 +13,7 @@ int deleteUser(int userId);
 
 int userValidate(char *username,char *password, USERS *user);
 
-int showAllUsers(char **string, int usersPerPage, int page);
+int showAllUsers(char **string, int usersPerPage, int *page);
 
 int searchForUsername(char **string, char *search, int usersPerPage, int page);
 

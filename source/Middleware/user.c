@@ -360,7 +360,7 @@ int addPageInfo(char **string, int page, int usersPerPage, int userTotal){
     char pagetotal[1024] = {'\0'};
     int maxUserPrint = 0;
     int maxPages = userTotal/usersPerPage;
-    sprintf(pageExtras, "\n+ pagina seguinte \n- pagina anterior\n");
+    sprintf(pageExtras, "\n+ pagina seguinte \n- pagina anterior\n0 sair\n");
     if(userTotal%usersPerPage != 0) maxPages++;
     if((page+1) * usersPerPage > userTotal){
         maxUserPrint = userTotal;
@@ -401,21 +401,23 @@ int addPageInfo(char **string, int page, int usersPerPage, int userTotal){
     return 0;
 }
 
-int showAllUsers(char **string, int usersPerPage, int page){
+int showAllUsers(char **string, int usersPerPage, int *page){
     int64_t userTotal = readTotalUsers();
     if(userTotal == 0) return -1;
-    if(page*usersPerPage > userTotal)return -1;
+    if(userTotal/usersPerPage < *page*usersPerPage){
+        *page = userTotal/usersPerPage;
+    }
     USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
     if(!users)return -1;
     if(loadUserData(users) != 0){
         freeUserData(&users);
         return -1;
     }
-    if(createUserString(string, users, userTotal, usersPerPage, page) != 0){
+    if(createUserString(string, users, userTotal, usersPerPage, *page) != 0){
         freeUserData(&users);
         return -1;
     }
-    if(addPageInfo(string, page, usersPerPage, userTotal) != 0){
+    if(addPageInfo(string, *page, usersPerPage, userTotal) != 0){
         freeUserData(&users);
         if(string != NULL) free((*string));
         return -1;

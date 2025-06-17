@@ -217,11 +217,18 @@ void userIndexMenu(int *programState){
     char *menuText = NULL;
     char buffer[256] = {'\0'};
     //handle extras
-    showAllUsers(&menuText, 5, page);
-
-    advancedPrint(menuText, 1, 1);
-    //handle menuInput
-    fgets(buffer, 256, stdin);
+    while(buffer[0] != '0'){
+        showAllUsers(&menuText, 5, &page);
+        advancedPrint(menuText, 1, 1);
+        //handle menuInput
+        fgets(buffer, 256, stdin);
+        if(buffer[0] == '+'){
+            page++;
+        }
+        if(buffer[0] == '-'){
+            page--;
+        }
+    }
     *programState = 100;
     if(menuText != NULL) free(menuText);
 }
