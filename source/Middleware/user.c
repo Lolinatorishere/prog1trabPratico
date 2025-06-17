@@ -182,7 +182,6 @@ int createUserString(char **string, USERS *users,int userTotal, int usersPerPage
         }
         strcat((*string), "\n"); index++;
     }
-    (*string)[index]='\0';
     (*string)[index+1]='\0';
     return 0;
 }
@@ -321,6 +320,44 @@ int userValidate(char *username,char *password, USERS *user){
     return 0;
 }
 
+int addPageInfo(char **string, int page, int usersPerPage, int userTotal){
+    char pageExtras[256] = {'\0'};
+    char pageInfo[256] = {'\0'};
+    char pageCur[256] = {'\0'};
+    char pagetotal[1024] = {'\0'};
+    int maxUserPrint = 0;
+    int maxPages = userTotal/usersPerPage;
+    sprintf(pageExtras, "+ pagina seguinte \n- pagina anterior\n");
+    if(userTotal%usersPerPage != 0) maxPages++;
+    if((page+1) * usersPerPage > userTotal){
+        maxUserPrint = userTotal;
+    }else{
+        maxUserPrint = usersPerPage*(page+1);
+    }
+    sprintf(pageCur,"pagina %i de %i", (page+1), maxPages);
+    sprintf(pageInfo,"users %i a %i\n", (page*usersPerPage)+1, maxUserPrint);
+    if(strlen(pageCur) + strlen(pageInfo) < TXT_CONST){
+        //centerString(TXT_CONST/2, pageCur);
+        //centerString(TXT_CONST/2, pageInfo);
+        strcat(pagetotal, pageCur);
+        pagetotal[strlen(pageCur)] = '|';
+        strcat(pagetotal, pageInfo);
+    }else{
+        strcat(pagetotal, pageCur);
+        pagetotal[strlen(pageCur)] = '\n';
+        strcat(pagetotal, pageInfo);
+    }
+    strcat(pagetotal, pageExtras);
+    //32 for safety reasons;
+    char *temp = realloc((*string), sizeof(char) * (strlen((*string)) + strlen(pagetotal) + 32));
+    if(!temp){
+        return -1;
+    }
+    (*string) = temp;
+    strcat((*string), pagetotal);
+    return 0;
+}
+
 int showAllUsers(char **string, int usersPerPage, int page){
     int64_t userTotal = readTotalUsers();
     if(userTotal == 0) return -1;
@@ -335,6 +372,15 @@ int showAllUsers(char **string, int usersPerPage, int page){
         freeUserData(&users);
         return -1;
     }
+    if(addPageInfo(string,page,usersPerPage,userTotal) != 0){
+        freeUserData(&users);
+        if(!string) free((*string));
+        return -1;
+    }
+}
+
+int searchForUsername(char **string, char *search, int usersPerPage, int page){
+    return 0;
 }
 
 int getUserWithId(USERS *user, int id){
