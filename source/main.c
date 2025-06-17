@@ -234,8 +234,18 @@ void usernameSearch(int *programState){
     advancedPrint("Pesquizar pelo utilizador", 1, 1);
     printf("username:");
     fgets(search,256, stdin);
-    search[strlen(search)] = '\0';
-    searchForUsername(&menuText, search, 5, page);
+    search[strlen(search)-1] = '\0';
+    switch(searchForUsername(&menuText, search, 5, page)){
+    case 0:
+        advancedPrint(menuText, 1, 1);
+    break;
+    case -1:
+        if(menuText != NULL) free(menuText);
+        return;
+    default:
+        menuPrint("userNonExists", 1, 1);
+        break;
+    }
     advancedPrint(menuText, 1, 1);
     if(menuText != NULL) free(menuText);
     fgets(search,256, stdin);

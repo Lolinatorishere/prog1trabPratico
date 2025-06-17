@@ -34,15 +34,41 @@ void copyUser(USERS *dst, USERS src){
     dst[0].userId = src.userId;
 }
 
-USERS *searchUsername(USERS *userList, int64_t listSize , char *username, int64_t *index) {
+USERS *searchUsername(USERS *userList, int64_t listSize, char *username, int64_t *index) {
+    int ulen = strlen(username);
     for(int64_t i = 0 ; i < listSize ; i++){
-        if(strcmp(userList[i].userName, username) == 0){
-            *index = i;
-            return &userList[i];
+        int check = 0;
+        if(ulen != strlen(userList[i].userName))continue;
+        for(int j = 0 ; j < ulen; j++){
+            if(userList[i].userName[j] != username[j])break;
+            check++;
         }
+        if(check != ulen) continue;
+        return &userList[i];
     }
     return NULL;
 }
+//doesnt work big sad 
+//todo work on part search of usernames
+int deepUsernameSearch(USERS *userList, USERS *hits, int64_t listSize, int64_t *hit_size, char *userName){
+    int unamesize = strlen(userName);
+    int accuracy = unamesize*0.75;
+    for(int64_t i = 0 ; i < listSize ; i++){
+        int listnamesize = strlen(userList[i].userName);
+        int same = 0;
+        for(int j = 0 ; j < listnamesize ; j++){
+            if(same > accuracy) {j = listnamesize; continue;}
+            if(j > unamesize)continue;
+            if(userList[i].userName[j] == userName[j]) same++;
+        }
+        if(same > accuracy){
+            hits[*hit_size] = userList[i];
+            *hit_size++;
+        }
+    }
+    return 0;
+}
+
 
 //This is assuming the ids in the List are sequential
 USERS *searchId(USERS *userList, int64_t listSize, int id, int64_t *index) {
@@ -398,9 +424,27 @@ int showAllUsers(char **string, int usersPerPage, int page){
     return 0;
 }
 
+// todo move user pointer to outside so i dont have to repeat the search every fkn time
 int searchForUsername(char **string, char *search, int usersPerPage, int page){
     int64_t userTotal = readTotalUsers();
+    USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
+    int64_t index = 0;
     if(userTotal == 0) return -1;
+    if(loadUserData(users) != 0){
+        free(users);
+        return 1;
+    }
+    USERS *user = searchUsername(users, userTotal, search, &index);
+    if(!user){
+        //todo work with deepUsernameSearch instead
+        free(users);
+        return 1;
+    }
+    if(createUserString(string, user, 1, 1, 0) != 0){
+        freeUserData(&users);
+        return -1;
+    }
+    free(users);
     return 0;
 }
 
