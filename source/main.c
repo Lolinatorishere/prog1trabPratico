@@ -69,7 +69,7 @@ void startUI(int *programState){
     *programState = input;
 }
 
-void NewUser(int *programState){
+void NewUser(int *programState, int admin){
     char username[256] = {'\0'};
     char password[256] = {'\0'};
     menuPrint("NewUser", 1, 1);
@@ -96,7 +96,8 @@ void NewUser(int *programState){
     switch(createUser(username,password, 0)){
     case 1:
         printf("\nuser %s criado com sucesso\n", username);
-        *programState = 0;
+        if(admin == 100)*programState = 100;
+        else *programState = 0;
         sleep(1);
         break;
     case 0:
@@ -360,7 +361,7 @@ int main(){
                 login(&user, &programState);
                 continue;
             case 2:
-                NewUser(&programState);
+                NewUser(&programState, 0);
                 continue;
             case 3:
                 LoggedIn(&user, &programState);
@@ -381,6 +382,7 @@ int main(){
                 //4 - Apagar Utilizador do Sistema
                 //5 - procurar utilizador
             case 101:
+                NewUser(&programState, 100);
                 continue;
             case 102:
                 userIndexMenu(&programState);
