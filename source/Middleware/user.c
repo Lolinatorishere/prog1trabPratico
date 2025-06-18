@@ -415,9 +415,12 @@ int addPageInfo(char **string, int page, int usersPerPage, int userTotal){
 int showAllUsers(char **string, int usersPerPage, int *page){
     int64_t userTotal = readTotalUsers();
     if(userTotal == 0) return -1;
-    if(userTotal/usersPerPage < *page*usersPerPage){
-        *page = userTotal/usersPerPage;
+    int maxPages = userTotal/usersPerPage;
+    if(userTotal%usersPerPage != 0){
+        maxPages++;
     }
+    if (*page >= maxPages) *page = maxPages-1;
+    if(*page<0)*page = 0;
     USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
     if(!users)return -1;
     if(loadUserData(users) != 0){
@@ -484,15 +487,26 @@ int searchForUserId(char **string, int search, int usersPerPage, int page){
     return 0;
 }
 
-int searchForUserType(char **string, USERS **userList, int *totalUsers, int search, int usersPerPage, int page){
+int searchForUserType(char **string, USERS **userList, int *totalUsers, int search, int usersPerPage, int *page){
     if((*userList) != NULL){
-        if(createUserString(string, (*userList), (*totalUsers), usersPerPage, page) != 0){
+        int maxPages = *totalUsers/usersPerPage;
+        if(*totalUsers%usersPerPage != 0){
+            maxPages++;
+        }
+        if(*page >= maxPages) *page = maxPages-1;
+        if(*page<0)*page = 0;
+        if(createUserString(string, (*userList), (*totalUsers), usersPerPage, *page) != 0){
             if(string != NULL) free((*string));
             if(userList != NULL) free((*userList));
             return -1;
         }
+        if(addPageInfo(string, *page, usersPerPage, *totalUsers) != 0){
+            if(string != NULL) free((*string));
+            free(userList);
+            return -1;
+        }
         return 0;
-    };
+    }
     int64_t userTotal = readTotalUsers();
     int64_t hit_size = 0;
     if(userTotal == 0) return -1;
@@ -515,12 +529,12 @@ int searchForUserType(char **string, USERS **userList, int *totalUsers, int sear
     searchWithType(users, (*userList), userTotal, &hit_size, search);
     freeUserData(&users);
     *totalUsers = hit_size;
-    if(createUserString(string, (*userList), *totalUsers, usersPerPage, page) != 0){
+    if(createUserString(string, (*userList), *totalUsers, usersPerPage, *page) != 0){
         if(string != NULL) free((*string));
         free(userList);
         return -1;
     }
-    if(addPageInfo(string, page, usersPerPage, *totalUsers) != 0){
+    if(addPageInfo(string, *page, usersPerPage, *totalUsers) != 0){
         if(string != NULL) free((*string));
         free(userList);
         return -1;

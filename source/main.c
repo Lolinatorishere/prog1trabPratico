@@ -290,7 +290,7 @@ void typeSearch(int *programState){
     printf("user tipo:");
     fgets(buffer,256, stdin);
     input = int64FromString(buffer);
-    searchForUserType(&menuText, &users, &totalUsers, input, 5, page);
+    searchForUserType(&menuText, &users, &totalUsers, input, 5, &page);
     if(totalUsers == 0){
         menuPrint("userNonExists", 1, 1);
         if(menuText != NULL) free(menuText);
@@ -299,7 +299,7 @@ void typeSearch(int *programState){
     }
     strcpy(buffer, "\0");
     while(buffer[0] != '0'){
-        searchForUserType(&menuText, &users, &totalUsers, input, 5, page);
+        searchForUserType(&menuText, &users, &totalUsers, input, 5, &page);
         advancedPrint(menuText, 1, 1);
         fgets(buffer, 256, stdin);
         if(buffer[0] == '+'){
