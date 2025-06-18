@@ -238,7 +238,7 @@ void usernameSearch(int *programState){
     char *menuText = NULL;
     int64_t input = 0;
     int page = 0;
-    advancedPrint("Pesquizar pelo utilizador", 1, 1);
+    menuPrint("searchingUser", 1, 1);
     printf("username:");
     fgets(search,256, stdin);
     search[strlen(search)-1] = '\0';
@@ -266,7 +266,7 @@ void idSearch(int *programState){
     char *menuText = NULL;
     int64_t input = 0;
     int page = 0;
-    advancedPrint("Pesquizar pelo utilizador", 1, 1);
+    menuPrint("searchingUser", 1, 1);
     printf("user ID:");
     fgets(buffer,256, stdin);
     input = int64FromString(buffer);
@@ -276,6 +276,42 @@ void idSearch(int *programState){
     fgets(buffer,256, stdin);
     input = int64FromString(buffer);
     if(input == 0) *programState = 105;
+    return;
+}
+
+void typeSearch(int *programState){
+    char buffer[256] = {'\0'};
+    char *menuText = NULL;
+    USERS *users = NULL;
+    int64_t totalUsers = 0;
+    int64_t input = 0;
+    int page = 0;
+    menuPrint("searchingUser", 1, 1);
+    printf("user tipo:");
+    fgets(buffer,256, stdin);
+    input = int64FromString(buffer);
+    searchForUserType(&menuText, &users, &totalUsers, input, 5, page);
+    if(totalUsers == 0){
+        menuPrint("userNonExists", 1, 1);
+        if(menuText != NULL) free(menuText);
+        free(users);
+        return;
+    }
+    strcpy(buffer, "\0");
+    while(buffer[0] != '0'){
+        searchForUserType(&menuText, &users, &totalUsers, input, 5, page);
+        advancedPrint(menuText, 1, 1);
+        fgets(buffer, 256, stdin);
+        if(buffer[0] == '+'){
+            page++;
+        }
+        if(buffer[0] == '-'){
+            page--;
+        }
+    }
+    if(menuText != NULL) free(menuText);
+    *programState = 105;
+    free(users);
     return;
 }
 
@@ -305,6 +341,7 @@ void userSearchMenu(int *programState){
         return;
     }
 }
+
 
 int main(){
     int programState = 0;
@@ -360,6 +397,9 @@ int main(){
                 continue;
             case 10502:
                 idSearch(&programState);
+                continue;
+            case 10503:
+                typeSearch(&programState);
                 continue;
             continue;
             //2 - Administrar Cursos

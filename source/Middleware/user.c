@@ -48,6 +48,7 @@ USERS *searchUsername(USERS *userList, int64_t listSize, char *username, int64_t
     }
     return NULL;
 }
+
 //doesnt work big sad 
 //todo work on part search of usernames
 int deepUsernameSearch(USERS *userList, USERS *hits, int64_t listSize, int64_t *hit_size, char *userName){
@@ -69,8 +70,18 @@ int deepUsernameSearch(USERS *userList, USERS *hits, int64_t listSize, int64_t *
     return 0;
 }
 
+int searchWithType(USERS *userList, USERS *hits, int64_t listSize, int64_t *hit_size, int type){
+    int64_t total = 0;
+    for(int i = 0 ; i < listSize ; i++){
+        if(userList[i].type != type)continue;
+        hits[total] = userList[i];
+        total++;
+    }
+    *hit_size = total;
+    return 0;
+}
 
-//This is assuming the ids in the List are sequential
+//This is assuming the ids in the List are sequential0
 USERS *searchId(USERS *userList, int64_t listSize, int id, int64_t *index) {
     int64_t low = 0, high = listSize - 1;
     while (low <= high) {
@@ -470,6 +481,50 @@ int searchForUserId(char **string, int search, int usersPerPage, int page){
         }
     }
     freeUserData(&users);
+    return 0;
+}
+
+int searchForUserType(char **string, USERS **userList, int *totalUsers, int search, int usersPerPage, int page){
+    if((*userList) != NULL){
+        if(createUserString(string, (*userList), (*totalUsers), usersPerPage, page) != 0){
+            if(string != NULL) free((*string));
+            if(userList != NULL) free((*userList));
+            return -1;
+        }
+        return 0;
+    };
+    int64_t userTotal = readTotalUsers();
+    int64_t hit_size = 0;
+    if(userTotal == 0) return -1;
+    USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
+    if(!users){
+        if(string != NULL) free((*string));
+        return -1;
+    }
+    *userList = malloc(sizeof(USERS) * (userTotal + 1));
+    if(!userList){
+        if(string != NULL) free((*string));
+        free(users);
+        return -1;
+    }
+    if(loadUserData(users) != 0){
+        if(string != NULL) free((*string));
+        freeUserData(&users);
+        return 1;
+    }
+    searchWithType(users, (*userList), userTotal, &hit_size, search);
+    freeUserData(&users);
+    *totalUsers = hit_size;
+    if(createUserString(string, (*userList), *totalUsers, usersPerPage, page) != 0){
+        if(string != NULL) free((*string));
+        free(userList);
+        return -1;
+    }
+    if(addPageInfo(string, page, usersPerPage, *totalUsers) != 0){
+        if(string != NULL) free((*string));
+        free(userList);
+        return -1;
+    }
     return 0;
 }
 

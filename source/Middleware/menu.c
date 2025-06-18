@@ -88,7 +88,7 @@ int readMenuFile(char *menuSection, char **menuText){
         fseek(fp, i, SEEK_SET);
         (*menuText)[i] = fgetc(fp);
     }
-    (*menuText)[filesize] = '\0';
+    (*menuText)[filesize+1] = '\0';
     fclose(fp);
     return 0;
 }

@@ -19,7 +19,7 @@ int searchForUsername(char **string, char *search, int usersPerPage, int page);
 
 int searchForUserId(char **string, int search, int usersPerPage, int page);
 
-int searchForUserType(char **string, int search, int usersPerPage, int page);
+int searchForUserType(char **string, USERS **userList, int64_t *totalUsers, int search, int usersPerPage, int page);
 
 int getUserWithId(USERS *user, int id);
 
