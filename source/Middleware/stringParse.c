@@ -3,6 +3,10 @@
 #include <string.h>
 #include "../../headers/defs.h"
 
+int isWhitespace(char c) {
+    return (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f');
+}
+
 int stringReplace(char *input, char *filter, char *replace){
     if(input == NULL) return 1;
     if(filter[0] == '\0') return 1;
@@ -26,12 +30,43 @@ int stringReplace(char *input, char *filter, char *replace){
     free(buffer);
     return 0;
 }
-//int intNumberInput(char *input, int *output);
 
+void trim(char *str) {
+    char *start = str;
+    char *end;
+    while (isWhitespace(*start)) {
+        start++;
+    }
+    if (*start == '\0') {
+        str[0] = '\0';
+        return;
+    }
+    end = start + strlen(start) - 1;
+    while (end > start && isWhitespace(*end)) {
+        end--;
+    }
+    *(end + 1) = '\0';
+    // Shift the trimmed string to the beginning of the original buffer
+    memmove(str, start, end - start + 2);
+}
+
+//int intNumberInput(char *input, int *output);
 int64_t int64FromString(char *input){
     if(input == NULL) return -1;
+    int inlen = strlen(input);
+    int j = 0;
+    int64_t output = 0;
     if(strlen(input) == 0)return -1;
-    return atoll(input);
+    char *seperateNums = malloc(sizeof(char) * inlen);
+    for(int i = 0 ; i < inlen ; i++){
+        isasciinum(input[i]){
+            seperateNums[j] = input[i];
+            j++;
+        }
+    }
+    output = atoll(seperateNums);
+    free(seperateNums);
+    return output;
 }
 
 //int floatNumberInput(char *input, float *output);

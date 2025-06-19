@@ -8,6 +8,8 @@ int stringReplace(char *input, char *filter, char *replace);
 
 int centerString(int size, char *text);
 
+void trim(char *str);
+
 //int intNumberInput(char *input, int *output);
 
 int64_t int64FromString(char *input);
