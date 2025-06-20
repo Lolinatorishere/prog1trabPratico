@@ -176,8 +176,8 @@ int createUserString(char **string, USERS *users,int userTotal, int usersPerPage
     int index = 0;
     char buffer[TXT_CONST];
     int ut_id = strlen(" / Id:");
-    int ut_type = strlen(" | Type:");
-    int ut_name = strlen(" | Name:");
+    int ut_type = strlen(" | Tipo:");
+    int ut_name = strlen(" | Nome:");
     int ut_pwd = strlen(" \\ Pwd:");
     strcpy((*string), "\0");
     if(TXT_CONST-ut_name <= ut_name)return -1;

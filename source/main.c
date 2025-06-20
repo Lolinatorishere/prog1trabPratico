@@ -377,8 +377,12 @@ void userAlterMenu(int *programState, USERS adminUser){
                 while(buffer[0] != '0'){
                     char edit[256] = {'\0'};
                     searchForUserId(&menuText, selectedID, 5, page);
+                    char *copyhere = malloc(sizeof(char)*strlen(menuText));
+                    strcpy(copyhere, menuText);
                     char *temp = realloc(menuText, sizeof(char) * sizeof(menuText) + strlen(editFunc));
                     menuText = temp;
+                    strcpy(menuText, copyhere);
+                    free(copyhere);
                     strcat(menuText, editFunc);
                     advancedPrint(menuText, 1, 1);
                     fgets(buffer, 256, stdin);
