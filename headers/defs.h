@@ -16,5 +16,9 @@
     #ifndef MARGIN
     #define MARGIN 4
     #endif
+    #ifndef isasciinum
+    #define isasciinum(STRING)\
+        if(STRING >= 48 && STRING <= 57)
+    #endif
 
 #endif

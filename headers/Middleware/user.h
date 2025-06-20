@@ -7,13 +7,13 @@ USERS setUser();
 
 int createUser(char *username, char *password, int type);
 
-int updateUser(int id, char *username, char *password, int type);
+int updateUser(int id, char *username, char *password, int *type);
 
 int deleteUser(int userId);
 
 int userValidate(char *username,char *password, USERS *user);
 
-int showAllUsers(char **string, int usersPerPage, int *page);
+int showAllUsers(char **string, int usersPerPage, int *page, char *extras);
 
 int searchForUsername(char **string, char *search, int usersPerPage, int page);
 

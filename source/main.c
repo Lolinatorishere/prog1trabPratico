@@ -83,6 +83,7 @@ void NewUser(int *programState, int admin){
     for(int i = strlen(username)-1 ; i < 256 ; i++){
         username[i] = '\0';
     }
+    trim(username);
     printf("password:");
     fgets(password, 256, stdin);
     if(strlen(password) == 0 || password[0] == '\n'){
@@ -93,6 +94,7 @@ void NewUser(int *programState, int admin){
     for(int i = strlen(password)-1 ; i < 256 ; i++){
         password[i] = '\0';
     }
+    trim(password);
     switch(createUser(username,password, 0)){
     case 1:
         printf("\nuser %s criado com sucesso\n", username);
@@ -219,7 +221,7 @@ void userIndexMenu(int *programState){
     char buffer[256] = {'\0'};
     //handle extras
     while(buffer[0] != '0'){
-        showAllUsers(&menuText, 5, &page);
+        showAllUsers(&menuText, 5, &page, NULL);
         advancedPrint(menuText, 1, 1);
         //handle menuInput
         fgets(buffer, 256, stdin);
@@ -343,6 +345,94 @@ void userSearchMenu(int *programState){
     }
 }
 
+void userAlterMenu(int *programState, USERS adminUser){
+    char extras[256] = "sel \"ID\"\n";
+    USERS user = setUser();
+    int page = 0;
+    int input = 0;
+    int selectedID = 0;
+    char buffer[256] = {'\0'};
+    char *menuText = NULL;
+    char editFunc[256] = "\n1 - username\n2 - password\n3 - type\n0 - voltar\n";
+    while(buffer[0] != '0'){
+        input = 0;
+        showAllUsers(&menuText, 5, &page, extras);
+        advancedPrint(menuText, 1, 1);
+        fgets(buffer, 256, stdin);
+        if(buffer[0] == '+'){
+            page++;
+        }
+        if(buffer[0] == '-'){
+            page--;
+        }
+        if(buffer[0] == 's' && buffer[1] == 'e' && buffer[2] == 'l'){
+            selectedID = int64FromString(buffer);
+            if(getUserWithId(&user, selectedID) != 0){
+                if(menuText != NULL) free(menuText);
+                *programState = 103;
+                menuPrint("userNonExists", 1, 1);
+                sleep(1);
+                return;
+            }else{
+                while(buffer[0] != '0'){
+                    char edit[256] = {'\0'};
+                    searchForUserId(&menuText, selectedID, 5, page);
+                    char *temp = realloc(menuText, sizeof(char) * sizeof(menuText) + strlen(editFunc));
+                    menuText = temp;
+                    strcat(menuText, editFunc);
+                    advancedPrint(menuText, 1, 1);
+                    fgets(buffer, 256, stdin);
+                    input = int64FromString(buffer);
+                    if(buffer[0] == '\n' || buffer[0] == '\0'){
+                        if(menuText != NULL) free(menuText);
+                        continue;
+                    }
+                    if(input == 1){
+                        printf("\nUsername:");
+                        fgets(buffer, 256, stdin);
+                        trim(buffer);
+                        switch(updateUser(user.userId, buffer, NULL, NULL)){
+                            case 3:
+                                 printf("username Not Unique");
+                                 sleep(1);
+                            break;
+                            case 0:
+                            break;
+                            default:
+                                if(menuText != NULL) free(menuText);
+                                return;
+                        }
+                    }
+                    if(input == 2){
+                        printf("\npassword:");
+                        fgets(edit, 256, stdin);
+                        trim(edit);
+                        if(updateUser(user.userId, NULL, edit, NULL) != 0){
+                            if(menuText != NULL) free(menuText);
+                            return;
+                        }
+                    }
+                    if(input == 3){
+                        if(adminUser.userId == selectedID) printf("Administradores nao podem alterar o seu tipo");
+                        else{
+                            printf("\ntipo:");
+                            fgets(edit, 256, stdin);
+                            input = int64FromString(edit);
+                            if(updateUser(user.userId, NULL, NULL, &input) == 3){
+                                if(menuText != NULL) free(menuText);
+                                return;
+                            }
+                        }
+                    }
+                    if(menuText != NULL) free(menuText);
+                }
+                strcpy(buffer, "\0");
+            }
+        }
+    }
+    if(menuText != NULL) free(menuText);
+    *programState = 100;
+}
 
 int main(){
     int programState = 0;
@@ -388,6 +478,7 @@ int main(){
                 userIndexMenu(&programState);
                 continue;
             case 103:
+                userAlterMenu(&programState, user);
                 continue;
             case 104:
                 continue;
