@@ -220,6 +220,7 @@ void userIndexMenu(int *programState){
     char *menuText = NULL;
     char buffer[256] = {'\0'};
     //handle extras
+    //
     while(buffer[0] != '0'){
         showAllUsers(&menuText, 5, &page, NULL);
         advancedPrint(menuText, 1, 1);
@@ -346,7 +347,7 @@ void userSearchMenu(int *programState){
 }
 
 void userAlterMenu(int *programState, USERS adminUser){
-    char extras[256] = "sel \"ID\"\n";
+    char extras[256] = "sel \"ID\" para editar utilizador\n";
     USERS user = setUser();
     int page = 0;
     int input = 0;
@@ -438,6 +439,62 @@ void userAlterMenu(int *programState, USERS adminUser){
     *programState = 100;
 }
 
+void userDeleteMenu(int *programState, USERS adminUser){
+    char extras[256] = "sel \"ID\" para remover utilizador\n";
+    USERS user;
+    int page = 0;
+    int selectedID = 0;
+    char buffer[256] = {'\0'};
+    char *menuText = NULL;
+    while(buffer[0] != '0'){
+        showAllUsers(&menuText, 5, &page, extras);
+        advancedPrint(menuText, 1, 1);
+        fgets(buffer, 256, stdin);
+        if(buffer[0] == '+'){
+            page++;
+        }
+        if(buffer[0] == '-'){
+            page--;
+        }
+        if(buffer[0] == 's' && buffer[1] == 'e' && buffer[2] == 'l'){
+            selectedID = int64FromString(buffer);
+            if(selectedID == adminUser.userId){
+                advancedPrint("Nao se pode apagar o utilizador proprio\n", 1, 1);
+                continue;
+            }
+            if(getUserWithId(&user, selectedID) != 0){
+                if(menuText != NULL) free(menuText);
+                *programState = 104;
+                menuPrint("userNonExists", 1, 1);
+                sleep(1);
+                return;
+            }else{
+                char confirm[256] = "C E R T E Z A";
+                char toPrint[512] = {'\0'};
+                int str_cmp = 0;
+                sprintf(toPrint, "Tem A certeza que quer apagar \nUtilizador: \"%s\"\nTipo: %i\n",user.userName, user.type);
+                advancedPrint(toPrint, 1, 1);
+                printf("escreve: \"C E R T E Z A\", para confirmar");
+                fgets(buffer, 256, stdin);
+                for(int i = 0 ; i < strlen(buffer) ; i++){
+                    if(buffer[i] != confirm[i]) break;
+                    str_cmp++;
+                }
+                if(str_cmp != strlen(confirm)){
+                    continue;
+                }
+                if(deleteUser(selectedID) != 0){
+                    *programState = 100;
+                    menuPrint("Error", 4, 4);
+                    return;
+                }
+            }
+        }
+    }
+    if(menuText != NULL) free(menuText);
+    *programState = 100;
+}
+
 int main(){
     int programState = 0;
     int start = 0;
@@ -485,6 +542,7 @@ int main(){
                 userAlterMenu(&programState, user);
                 continue;
             case 104:
+                userDeleteMenu(&programState, user);
                 continue;
             case 105:// search specific user;
                 userSearchMenu(&programState);
