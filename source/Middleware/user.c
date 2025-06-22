@@ -237,12 +237,12 @@ int createUser(char *username, char *password, int type){
     switch(loadUserData(users)){
         case 0:
             if(searchUsername(users, userTotal, username, &index) != NULL){
-                freeUserData(&users);
+                free(users);
                 return 0;
             }
             break;
         case -1:
-            freeUserData(&users);
+            free(users);
             return -1;
         default:
             break;
@@ -259,11 +259,13 @@ int createUser(char *username, char *password, int type){
     userTotal++;
     if(updateUserData(users, userTotal) == -1)
         return -1;
-    freeUserData(&users);
+    free(users);
     return 1;
 }
 
 int updateUser(int id, char *username, char *password, int *type){
+    if(username[0] == '\0' && password[0] == '\0' && type == NULL)return 1;
+    int error = 0;
     int64_t index = 0;
     int64_t userTotal = readTotalUsers();
     USERS *users = malloc(sizeof(USERS) * (userTotal+1));
@@ -277,30 +279,30 @@ int updateUser(int id, char *username, char *password, int *type){
             return 1;
         default:
             if(!searchId(users, userTotal, id, &index)){
-                if(users != NULL) free(users);
-                return 2;
+                error = 2;
+                break;
             }
-            if(username != NULL){
+            if(username[0] != '\0'){
                 int64_t data = 0;
                 if(searchUsername(users, userTotal, username, &data) != NULL) {
                     if(users != NULL) free(users);
-                    return 3;
+                    error = 3;
+                    break;
                 }
                 username[strlen(username)] = '\0';
                 strcpy(users[index].userName, username);
             }
-            if(password != NULL){
+            if(password[0] != '\0'){
                 password[strlen(password)] = '\0';
                 strcpy(users[index].password, password);
             }
             if(type != NULL)
                 users[index].type = *type;
             updateUserData(users, userTotal);
-            if(users != NULL) free(users);
-            return 0;
+            break;
     }
-    if(users != NULL) free(&users);
-    return 0;
+    free(users);
+    return error;
 }
 
 int deleteUser(int id){
@@ -317,7 +319,7 @@ int deleteUser(int id){
             return 1;
         default:
             if(!searchId(users, userTotal, id, &index)){
-                freeUserData(&users);
+                free(users);
                 return 0;
             }
             // aray[x] replaced with [x+n];
@@ -328,7 +330,7 @@ int deleteUser(int id){
                 }
             }
             updateUserData(users, userTotal-1);
-            freeUserData(&users);
+            free(users);
             return 0;
     }
 }
@@ -341,7 +343,7 @@ int userValidate(char *username,char *password, USERS *user){
     if(!users) return -1;
     *user = setUser();
     if(loadUserData(users) != 0){
-        freeUserData(&users);
+        free(users);
         return 1;
     }
     for(int i = 0 ; i < userTotal ; i++){
@@ -364,7 +366,7 @@ int userValidate(char *username,char *password, USERS *user){
         user->userId = users[i].userId;
         break;
     }
-    freeUserData(&users);
+    free(users);
     if(user->type < 0) return -1;
     return 0;
 }
@@ -442,19 +444,19 @@ int showAllUsers(char **string, int usersPerPage, int *page, char *extras){
     USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
     if(!users)return -1;
     if(loadUserData(users) != 0){
-        freeUserData(&users);
+        free(users);
         return -1;
     }
     if(createUserString(string, users, userTotal, usersPerPage, *page) != 0){
-        freeUserData(&users);
+        free(users);
         return -1;
     }
     if(addPageInfo(string, *page, usersPerPage, userTotal, extras) != 0){
-        freeUserData(&users);
-        if(string != NULL) free((*string));
+        free(users);
+        free((*string));
         return -1;
     }
-    freeUserData(&users);
+    free(users);
     return 0;
 }
 
@@ -475,7 +477,7 @@ int searchForUsername(char **string, char *search, int usersPerPage, int page){
         return 1;
     }
     if(createUserString(string, user, 1, 1, 0) != 0){
-        freeUserData(&users);
+        free(users);
         return -1;
     }
     free(users);
@@ -488,7 +490,7 @@ int searchForUserId(char **string, int search, int usersPerPage, int page){
     int64_t index = 0;
     if(userTotal == 0) return -1;
     if(loadUserData(users) != 0){
-        freeUserData(&users);
+        free(users);
         return 1;
     }
     USERS *user = searchId(users, userTotal, search, &index);
@@ -497,11 +499,11 @@ int searchForUserId(char **string, int search, int usersPerPage, int page){
         strcpy((*string), "Utilizador Nao Existe\n");
     }else{
         if(createUserString(string, user, 1, 1, 0) != 0){
-            freeUserData(&users);
+            free(users);
             return -1;
         }
     }
-    freeUserData(&users);
+    free(users);
     return 0;
 }
 
@@ -514,12 +516,12 @@ int searchForUserType(char **string, USERS **userList, int *totalUsers, int sear
         if(*page >= maxPages) *page = maxPages-1;
         if(*page<0)*page = 0;
         if(createUserString(string, (*userList), (*totalUsers), usersPerPage, *page) != 0){
-            if(string != NULL) free((*string));
-            if(userList != NULL) free((*userList));
+            free((*string));
+            free((*userList));
             return -1;
         }
         if(addPageInfo(string, *page, usersPerPage, *totalUsers, NULL) != 0){
-            if(string != NULL) free((*string));
+            free((*string));
             free(userList);
             return -1;
         }
@@ -530,30 +532,30 @@ int searchForUserType(char **string, USERS **userList, int *totalUsers, int sear
     if(userTotal == 0) return -1;
     USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
     if(!users){
-        if(string != NULL) free((*string));
+        free((*string));
         return -1;
     }
     *userList = malloc(sizeof(USERS) * (userTotal + 1));
     if(!userList){
-        if(string != NULL) free((*string));
+        free((*string));
         free(users);
         return -1;
     }
     if(loadUserData(users) != 0){
-        if(string != NULL) free((*string));
-        freeUserData(&users);
+        free((*string));
+        free(users);
         return 1;
     }
     searchWithType(users, (*userList), userTotal, &hit_size, search);
-    freeUserData(&users);
+    free(users);
     *totalUsers = hit_size;
     if(createUserString(string, (*userList), *totalUsers, usersPerPage, *page) != 0){
-        if(string != NULL) free((*string));
+        free((*string));
         free(userList);
         return -1;
     }
     if(addPageInfo(string, *page, usersPerPage, *totalUsers, NULL) != 0){
-        if(string != NULL) free((*string));
+        free((*string));
         free(userList);
         return -1;
     }
@@ -566,11 +568,11 @@ int getUserWithId(USERS *user, int id){
     USERS *temp;
     USERS *users = malloc(sizeof(USERS) * (userTotal + 1));
     if(loadUserData(users) != 0){
-        freeUserData(&users);
-        return 1;
+        free(users);
+        return -1;
     }
     temp = searchId(users, userTotal, id, &index);
-    if(temp == NULL){free(users); return -1;}
+    if(temp == NULL){free(users); return 1;}
     copyUser(user, (*temp));
     return 0;
 }

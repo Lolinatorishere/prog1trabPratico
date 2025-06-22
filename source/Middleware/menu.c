@@ -1,117 +1,63 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ncurses.h>
-#include "../../headers/defs.h"
+#include <unistd.h>
+#include "../../headers/Middleware/screenPrint.h"
+#include "../../headers/Middleware/user.h"
+#include "../../headers/Middleware/stringParse.h"
+#include "./Menus/middleware.c"
+#include "./Menus/userMenus.c"
 
-//prints a line of "space" aka " "
-void dynamic_linespace(int text_constant, int txt_indent, int txt_margin, int lines){
-    if(lines == 0) return;
-    for(int i = 0 ; i < lines ; i++){
-        char space[1] = " ";
-        printf("|%*c|\n", text_constant + txt_indent + txt_margin, space[0]);
-    }
-}
-
-void dynamic_begin_text(int text_constant, int txt_indent, int txt_margin){
-    char line[1] = "-";
-    printf("/");
-    for(int i = 0; i < text_constant + txt_indent + txt_margin; i++){
-        printf("%c",line[0]);
-    }
-    printf("\\\n");
-}
-
-void dynamic_end_text(int text_constant, int txt_indent, int txt_margin){
-    char line[1] = "-";
-    printf("\\");
-    for(int i = 0; i < text_constant + txt_indent + txt_margin; i++){
-        printf("%c",line[0]);
-    }
-    printf("/\n");
-}
-
-void dynamic_line_print(char *string, int text_const, int txt_indent, int txt_margin){
-    //have to check for \n chars and replace with pretty much a dymanic line space
-    //recieves a string that is read and then it is printed in a certain way
-    int arraysize = strlen(string);
-    if(arraysize == 0) return;
-    if(text_const == 0) text_const = 1;
-    char space = ' ';
-    int i = 0, j = 0;
-    printf("|%*c", txt_indent, space);
-    for(i = 0 ; i <= arraysize; i++){
-        if(string[i] == '\n' && i+1 != arraysize){
-            printf("%*c|\n", text_const-j + txt_margin, space);
-            j = 0;
-            printf("|%*c", txt_indent, space);
+void login(USERS *user, int *programState){
+    //todo create a function that searches for the user
+    int attempts = 0;
+    char username[256] = {'\0'};
+    char password[256] = {'\0'};
+    while(attempts < 3){
+        menuPrint("Login", 1, 1);
+        printf("Nome:");
+        fgets(username, 256, stdin);
+        if(strlen(username) == 0 || username[0] == '\n'){
+            printf("username cant be null\n");
+            sleep(1);
             continue;
         }
-        if(j >= text_const){
-            printf("%*c|\n", text_const-j + txt_margin, space);
-            printf("|%*c", txt_indent, space);
-            i--;
-            j = 0;
+        for(int i = strlen(username)-1 ; i < 256 ; i++){
+            username[i] = '\0';
+        }
+        printf("Password:");
+        fgets(password, 256, stdin);
+        if(strlen(password) == 0 || password[0] == '\n'){
+            printf("password cant be null\n");
+            sleep(1);
             continue;
         }
-        if(i+1 == arraysize){
-            printf("%*c|\n", text_const-j + txt_margin, space);
-            continue;
+        for(int i = strlen(password)-1 ; i < 256 ; i++){
+            password[i] = '\0';
         }
-        j++;
-        printf("%c",string[i]);
+        if(userValidate(username, password, user) == 0){
+            printf("Bem vindo %s\n", user->userName);
+            *programState = 3;
+            sleep(2);
+            return;
+        }
+        printf("username ou password erradas\n");
+        sleep(2);
+        attempts++;
     }
+    returnText("start Menu", 3);
+    *programState = 0;
+    return;
 }
 
-int readMenuFile(char *menuSection, char **menuText){
-    char *dir = malloc(sizeof(char)*256);
-    if(!dir)return -1;
-    strcpy(dir, "./menus/");
-    strcat(dir, menuSection);
-    strcat(dir,".menu");
-    FILE *fp = fopen(dir, "r");
-    if(fp == NULL) return -1;
-    free(dir);
-    fseek(fp, 0, SEEK_END);
-    int64_t filesize = ftell(fp);
-    if(filesize == 0){
-        fclose(fp);
-        return -1;
-    }
-    fseek(fp, 0, SEEK_SET);
-    *menuText = malloc(sizeof(char) * filesize + 1);
-    if(!menuText){
-        fclose (fp);
-        return -1;
-    }
-    for(int i = 0 ; i < filesize ; i++){
-        fseek(fp, i, SEEK_SET);
-        (*menuText)[i] = fgetc(fp);
-    }
-    (*menuText)[filesize+1] = '\0';
-    fclose(fp);
-    return 0;
+void startUI(int *programState){
+    char buffer[256];
+    menuPrint("StartUI", 1, 1);
+    printf("input:");
+    fgets(buffer, 256, stdin);
+    int64_t input = int64FromString(buffer);
+    if(input <= 0){*programState = -1; return;}
+    if(input >= 3){*programState = -1; return;}
+    *programState = input;
 }
 
-void printToScreen(char *input, int padding_top, int padding_bottom){
-    syscls;
-    dynamic_begin_text(TXT_CONST, INDENT, MARGIN);
-    dynamic_linespace(TXT_CONST, INDENT, MARGIN, padding_top);
-    dynamic_line_print(input, TXT_CONST, INDENT, MARGIN);
-    dynamic_linespace(TXT_CONST, INDENT, MARGIN, padding_bottom);
-    dynamic_end_text(TXT_CONST, INDENT, MARGIN);
-}
-
-int menuPrint(char *menuSection, int padding_top, int padding_bottom){
-    char *menuText = NULL;
-    if(readMenuFile(menuSection, &menuText) != 0) return -1;
-    printToScreen(menuText, padding_top, padding_bottom);
-    free(menuText);
-    return 0;
-}
-
-int advancedPrint(char *input, int padding_top, int padding_bottom){
-    if(input == NULL) return -1;
-    printToScreen(input, padding_top, padding_bottom);
-    return 0;
-}
